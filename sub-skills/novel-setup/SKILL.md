@@ -1,67 +1,67 @@
-# novel-setup
+# configuración-de-novela
 
-**版本**: 2.0  
-**功能**: Step 2 - 设定生成
+**Versión**: 2.0
+**Función**: Paso 2 - Generación del entorno
 
 ---
 
-## 输入
+## Entrada
 
 ```yaml
-brainstorm_result: object    # 头脑风暴确认的要素
+brainstorm_result: object    # Elementos confirmados durante la lluvia de ideas
 project_path: string
 ```
 
 ---
 
-## 输出
+## Salida
 
 ```yaml
 status: "success"
 generated_files:
-  essential:                 # 有内容
-    - world-setting.md
-    - protagonist.md
-    - power-system.md       # 如适用，否则为political-system.md
-  extension:                 # 框架先行
-    - organizations.md
-    - geography.md
-    - artifacts.md
-    - timeline.md
-    - races.md
-    - culture.md
+essential:                 # Contenido completado
+- world-setting.md
+- protagonist.md
+- power-system.md       # O political-system.md, si corresponde
+extension:                 # Solo estructuras base
+- organizations.md
+- geography.md
+- artifacts.md
+- timeline.md
+- races.md
+- culture.md
 user_prompt: |
-  扩展设定框架已创建。以下哪些你已经想好了？
-  
-  □ 势力/组织分布
-  □ 地图/关键地点
-  □ 物品/道具系统
-  □ 历史/时间线
-  □ 种族/生物图鉴
-  □ 文化/社会规则
-  
-  勾选的项我帮你填充内容，没勾选的保持'待补充'。
+Se ha creado la estructura para los elementos extendidos del entorno. ¿Cuáles de los siguientes ya tienes planificados?
+
+□ Facciones/Organizaciones
+□ Mapa/Lugares clave
+□ Sistema de objetos/elementos
+□ Historia/Cronología
+□ Razas/Bestiario
+□ Cultura/Normas sociales
+
+Completaré el contenido de los elementos que marques; los no marcados permanecerán como 'Pendientes'.
 next_action: "wait_user_selection"
 ```
 
 ---
 
-## 执行动作
+## Acciones de ejecución
 
-1. 生成3类必备设定（基于brainstorm结果）
-2. 创建6类扩展设定（框架+待补充标记）
-3. 询问用户哪些需要立即填充
+1. Generar 3 tipos de elementos esenciales del entorno (basados ​​en los resultados de la lluvia de ideas)
+2. Crear 6 tipos de elementos extendidos (estructuras base + marcadores de 'Pendiente')
+3. Preguntar al usuario cuáles requieren desarrollo inmediato
 
 ---
 
-## 13类设定清单
+## Lista de 13 categorías del entorno
 
-### 必备（3类）
+### Esenciales (3 tipos)
 1. world-setting.md
 2. protagonist.md
 3. power-system.md / political-system.md
 
-### 扩展（6类）
+### Extendidos (6 tipos)
 4. organizations.md
 5. geography.md
 6. artifacts.md
@@ -69,5 +69,5 @@ next_action: "wait_user_selection"
 8. races.md
 9. culture.md
 
-### 动态（写作中维护）
-10-13. 配角、伏笔、认知、章节摘要
+### Dinámicos (Se actualizan durante la escritura)
+10-13. Personajes secundarios, presagios, percepciones, resúmenes de capítulos
