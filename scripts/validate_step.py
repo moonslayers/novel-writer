@@ -197,4 +197,140 @@ def validate_step_5(args):
     content = outline_file.read_text(encoding='utf-8')
     
     # Verificar si contiene capítulos (formato en español)
-    chapter_count = len(re.findall(r'(?:Capítulo|Cap\.?)\s
+    chapter_count = len(re.findall(r'(?:Capítulo|Cap\.?)\s*\d+', content, re.IGNORECASE))
+    if chapter_count >= 1:
+        print(f"✓ El esquema de capítulos contiene {chapter_count} capítulos")
+    else:
+        print(f"❌ No se encontraron definiciones de capítulos en el esquema")
+        return False
+    
+    return True
+
+def validate_step_6(args):
+    """Valida Step 6: chapter_loop - Escritura de capítulo individual"""
+    if not args.chapter:
+        print("❌ Error: Se requiere el parámetro --chapter para validar capítulo")
+        return False
+    
+    project_path = get_project_path(args.book_name)
+    if not project_path:
+        print(f"❌ Error: No se encontró el directorio del proyecto '{args.book_name}'")
+        return False
+    
+    # Analizar número de capítulo (ej: "1_01" = Volumen 1, Capítulo 1)
+    chapter_parts = args.chapter.split('_')
+    if len(chapter_parts) != 2:
+        print(f"❌ Error: El formato del número de capítulo debe ser 'X_Y' (ej. 1_01)")
+        return False
+    
+    volume, chapter_num = chapter_parts
+    chapter_file = project_path / "chapters" / f"vol{volume}_chapter_{chapter_num}.md"
+    
+    if not chapter_file.exists():
+        print(f"❌ Archivo faltante: {chapter_file.name}")
+        return False
+    
+    content = chapter_file.read_text(encoding='utf-8')
+    
+    # Contar palabras en español (no caracteres como en chino)
+    spanish_words = len(re.findall(r'\b\w+\b', content))
+    
+    # Verificación de longitud: se requieren 2500-3500 palabras para un capítulo en español
+    if spanish_words < 2500:
+        print(f"❌ Longitud insuficiente: {spanish_words} palabras (se requieren 2500-3500 palabras)")
+        return False
+    elif spanish_words > 3500:
+        print(f"⚠ Longitud excesiva: {spanish_words} palabras (se recomiendan 2500-3500 palabras)")
+    else:
+        print(f"✓ Longitud correcta: {spanish_words} palabras")
+    
+    # Verificar si hay gancho inicial
+    first_lines = '\n'.join(content.split('\n')[:10])
+    hook_indicators = ['.', '?', '!', '"', '"', "'", '...', '—', '¿', '¡']
+    has_hook = any(indicator in first_lines for indicator in hook_indicators)
+    
+    if has_hook:
+        print("✓ El inicio tiene signos de puntuación/diálogo")
+    else:
+        print("⚠ Sugerencia: Añadir un gancho más atractivo al principio")
+    
+    # Verificar descripciones sensoriales
+    sensory_words = ['ver', 'mir', 'oí', 'escuch', 'ol', 'toc', 'sensación', 'luz', 'sonido', 'olor', 'temperatura',
+                     'vista', 'oído', 'olfato', 'tacto', 'gusto']
+    has_sensory = any(word in content.lower() for word in sensory_words)
+    
+    if has_sensory:
+        print("✓ Contiene descripciones sensoriales")
+    else:
+        print("⚠ Sugerencia: Añadir detalles sensoriales (vista, oído, tacto, olfato, gusto)")
+    
+    # Verificar diálogos
+    dialogue_count = len(re.findall(r'["""«»].*?["""«»]', content))
+    if dialogue_count >= 3:
+        print(f"✓ Contiene diálogos ({dialogue_count} instancias)")
+    else:
+        print(f"⚠ Pocos diálogos ({dialogue_count} instancias), se recomienda aumentar las conversaciones entre personajes")
+    
+    return True
+
+def validate_step_7(args):
+    """Valida Step 7: final_assemble - Compilación final"""
+    project_path = get_project_path(args.book_name)
+    if not project_path:
+        print(f"❌ Error: No se encontró el directorio del proyecto '{args.book_name}'")
+        return False
+    
+    final_md = project_path / "deliverables" / "final.md"
+    
+    if not final_md.exists():
+        print(f"❌ Archivo faltante: deliverables/final.md")
+        return False
+    
+    size = final_md.stat().st_size
+    print(f"✓ Archivo de compilación existe ({size} bytes)")
+    
+    # Verificar si contiene todos los capítulos
+    content = final_md.read_text(encoding='utf-8')
+    chapter_count = len(re.findall(r'(?:Capítulo|Cap\.?)\s*\d+', content, re.IGNORECASE))
+    print(f"✓ La compilación contiene aproximadamente {chapter_count} capítulos")
+    
+    return True
+
+def main():
+    parser = argparse.ArgumentParser(description='Script de validación de pasos de novel-writer')
+    parser.add_argument('--step', type=int, required=True, help='Paso a validar (0-7)')
+    parser.add_argument('--book-name', type=str, required=True, help='Nombre del libro')
+    parser.add_argument('--chapter', type=str, help='Número de capítulo (ej. 1_01)')
+    parser.add_argument('--volume', type=int, help='Número de volumen')
+    
+    args = parser.parse_args()
+    
+    validators = {
+        0: validate_step_0,
+        1: validate_step_1,
+        2: validate_step_2,
+        3: validate_step_3,
+        4: validate_step_4,
+        5: validate_step_5,
+        6: validate_step_6,
+        7: validate_step_7,
+    }
+    
+    if args.step not in validators:
+        print(f"❌ Error: Número de paso inválido {args.step}")
+        sys.exit(1)
+    
+    print(f"\n🔍 Validando Step {args.step}: {args.book_name}\n")
+    
+    result = validators[args.step](args)
+    
+    print()
+    if result:
+        print("✅ Validación exitosa")
+        sys.exit(0)
+    else:
+        print("❌ Validación fallida")
+        sys.exit(1)
+
+if __name__ == '__main__':
+    main()
