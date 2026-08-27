@@ -1,50 +1,50 @@
 # novel-chapter-character
 
-**版本**: 2.0  
-**功能**: Step 4.3 - 人物配置
+**Versión**: 2.0
+**Función**: Paso 4.3 - Configuración de personajes
 
 ---
 
-## 输入
+## Entrada
 
 ```yaml
-framework: object            # 章纲中的人物需求
+framework: object            # Requisitos del personaje según el esquema del capítulo
 chapter_number: number
 project_path: string
 ```
 
 ---
 
-## 输出
+## Salida
 
 ```yaml
 status: "success"
 character_configs:
-  existing:
-    - name: string
-      source: "existing"
-      current_state: object
-      offline_changes: string  # 间隔≥10章时生成
-  new:
-    - name: string
-      source: "created"
-      profile: object
-      archive_decision: "yes" | "no"
+existing:
+- name: string
+source: "existing"
+current_state: object
+offline_changes: string  # Se genera cuando la diferencia es ≥ 10 capítulos
+new:
+- name: string
+source: "created"
+profile: object
+archive_decision: "yes" | "no"
 ```
 
 ---
 
-## 离线角色更新规则
+## Reglas de actualización de personajes fuera de pantalla
 
 ```
-间隔 < 10章：保持原样
-间隔 ≥ 10章：按需生成变化
+Diferencia < 10 capítulos: Sin cambios
+Diferencia ≥ 10 capítulos: Generar cambios según sea necesario
 
-变化类型：
-A. 保持原样
-B. 小幅进展
-C. 重大突破
-D. 遭遇变故
+Tipos de cambio:
+A. Sin cambios
+B. Progreso menor
+C. Avance significativo
+D. Evento inesperado
 
-选择依据：剧情需要 > 角色目标 > 随机合理
+Criterios de selección: Requisitos de la trama > Objetivos del personaje > Aleatorio pero plausible
 ```
