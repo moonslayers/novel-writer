@@ -1,11 +1,11 @@
 # novel-check-quality
 
-**版本**: 2.0  
-**功能**: 质量检查
+**Versión**: 2.0
+**Función**: Verificación de calidad
 
 ---
 
-## 输入
+## Entrada
 
 ```yaml
 chapter_content: string
@@ -16,36 +16,36 @@ project_path: string
 
 ---
 
-## 输出
+## Salida
 
 ```yaml
 status: "success"
 passed: boolean
 warnings:
-  - type: "consistency" | "structure" | "style"
-    message: string
-    severity: "low" | "medium" | "high"
+- type: "consistency" | "structure" | "style"
+message: string
+severity: "low" | "medium" | "high"
 errors:
-  - type: string
-    message: string
-    severity: "critical"
+- type: string
+message: string
+severity: "critical"
 details:
-  word_count: number
-  structure_ratio:
-    setup: number
-    climax: number
-    aftermath: number
+word_count: number
+structure_ratio:
+setup: number
+climax: number
+aftermath: number
 ```
 
 ---
 
-## 检查维度
+## Dimensiones de verificación
 
-| 维度 | 检查项 | 处理方式 |
-|------|--------|---------|
-| 一致性 | 设定冲突、人物OOC | 警告，不阻塞 |
-| 结构 | 60-20-20比例 | 错误，需修正 |
-| 风格 | 形容词过多 | 警告，不阻塞 |
-| 完整性 | 必填元素缺失 | 错误，需修正 |
+| Dimensión | Elemento a verificar | Método de gestión |
+|-----------|------------|-----------------|
+| Consistencia | Conflictos de ambientación, personaje fuera de carácter (OOC) | Advertencia; no bloquea el proceso |
+| Estructura | Proporción 60-20-20 | Error; requiere corrección |
+| Estilo | Adjetivos excesivos | Advertencia; no bloquea el proceso |
+| Integridad | Elementos obligatorios faltantes | Error; requiere corrección |
 
-检查结果供参考，严重结构错误才阻塞流程。
+Los resultados de la verificación son orientativos; solo los errores estructurales críticos bloquean el proceso.
