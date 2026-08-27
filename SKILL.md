@@ -1,585 +1,577 @@
 ---
 name: novel-writer
-description: 小说创作引擎（v3.0）。强制验证+检查点+进化机制。支持长篇小说从创意到完稿的全流程。触发：用户说"写小说"、"创作故事"、"连载"等。
+description: Motor de creación de novelas (v3.0). Incluye validación obligatoria, puntos de control y un mecanismo evolutivo. Admite todo el flujo de trabajo para escribir una novela completa, desde el concepto inicial hasta el manuscrito final. Se activa mediante comandos del usuario como "escribir una novela", "crear una historia" o "iniciar una serie".
 metadata: {"clawdbot":{"emoji":"📚"}}
 ---
 
 # novel-writer v3.0
 
-**核心理念**：文字规范抵不过代码约束。用脚本强制验证，用检查点保证可恢复，用进化机制持续改进。
+**Filosofía fundamental**: Las restricciones basadas en código prevalecen sobre las directrices estilísticas. Utiliza scripts para la validación obligatoria, puntos de control para garantizar la capacidad de recuperación y un mecanismo evolutivo para la mejora continua. ---
 
----
+## Ruta de salida del proyecto
 
-## 项目输出路径
+**Regla de ruta**: `~/Documents/{BookTitle}/`
 
-**路径规则**：`~/Documents/{书名}/`
+- El nombre del directorio utiliza **únicamente caracteres chinos**, coincidiendo exactamente con el título del libro. - Ejemplo: *He Raised the Emperor* → `~/Documents/他养大了皇帝/`
+- Ejemplo: *The Hidden Prime Minister* → `~/Documents/隐相/`
 
-- 目录名使用**纯中文字符**，与书名完全一致
-- 示例：《他养大了皇帝》→ `~/Documents/他养大了皇帝/`
-- 示例：《隐相》→ `~/Documents/隐相/`
-
-**目录结构**：
+**Estructura de directorios**:
 ```
-~/Documents/{书名}/
+~/Documents/{BookTitle}/
 ├── config/
-│   ├── project_info.md        # 项目元信息
-│   ├── worldbuilding.md       # 世界观设定
-│   ├── characters.md          # 人物小传
-│   └── volume_outline.md      # 卷纲
+│   ├── project_info.md ​​​​       # Metadatos del proyecto
+│   ├── worldbuilding.md       # Configuración de la construcción del mundo
+│   ├── characters.md          # Biografías de personajes
+│   └── volume_outline.md      # Esquema del volumen
 ├── memory/
-│   ├── character_cards.md     # 角色卡（YAML格式）
-│   ├── relationship_map.md    # 人物关系图谱
-│   ├── foreshadowing.md       # 伏笔追踪
-│   ├── lessons_learned.md     # 创作经验积累
-│   └── checkpoints/           # 检查点快照
+│   ├── character_cards.md     # Fichas de personajes (formato YAML)
+│   ├── relationship_map.md    # Mapa de relaciones entre personajes
+│   ├── foreshadowing.md       # Seguimiento de presagios
+│   ├── lessons_learned.md     # Ideas creativas acumuladas
+│   └── checkpoints/           # Instantáneas de puntos de control
 ├── chapters/
 │   ├── vol1_chapter_01.md
 │   ├── vol1_chapter_02.md
 │   └── ...
 ├── deliverables/
-│   ├── final.md               # 合并稿
-│   └── final.docx             # 导出文档
-└── status.md                  # 当前状态（唯一真相源）
+│   ├── final.md               # Manuscrito consolidado
+│   └── final.docx             # Documento exportado
+└── status.md                  # Estado actual (Fuente única de verdad)
 ```
 
 ---
 
-## 核心架构
+## Arquitectura central
 
 ```
-用户 ←→ novel-writer（调度器）
-           │
-           ├── scripts/validate_step.py（强制验证）
-           ├── scripts/checkpoint.py（快照/回滚）
-           └── 子Skill（执行具体任务）
+Usuario ←→ novel-writer (Planificador)
+│
+├── scripts/validate_step.py (Validación obligatoria)
+├── scripts/checkpoint.py (Instantánea/Reversión)
+└── Sub-habilidades (Ejecución de tareas específicas)
 ```
 
-**铁律**：
-1. 每一步完成必须运行验证脚本
-2. 验证失败 = 阻断，不可跳过
-3. 关键节点自动创建检查点
+**Reglas inquebrantables**:
+1. El script de validación debe ejecutarse al finalizar cada paso.
+2. Fallo en la validación = Bloqueo (no se puede omitir).
+3. Los puntos de control se crean automáticamente en hitos clave. ---
 
----
+## Máquina de estados (con validación obligatoria)
 
-## 状态机（带强制验证）
-
-### Step 0: init
+### Paso 0: init (Inicialización)
 ```
-动作：初始化项目
-验证：scripts/validate_step.py --step 0
-产出：status.md（初始状态）
+Acción: Inicializar el proyecto
+Validación: scripts/validate_step.py --step 0
+Salida: status.md (Estado inicial)
 ```
 
-### Step 1: brainstorm（创意构思）⚠️ 必须与用户讨论
+### Paso 1: brainstorm (Ideación creativa) ⚠️ Debe consultarse con el usuario
 ```
-动作：与用户讨论并确认以下六个要素
-  1. 书名（提供3-5个选项让用户选择，或接受用户自己的命名）
-  2. 篇幅（短篇/中篇/长篇，说明字数范围）
-  3. 叙事视角（第三人称/第一人称/双视角，说明优劣）
-  4. 故事范围（聚焦某段/完整人生）
-  5. 情感基调（如：悬疑、感人、热血、轻松等）
-  6. 文风（见下方【文风选择指南】）
+Acción: Debatir y confirmar los siguientes seis elementos con el usuario:
+1. Título (Ofrecer entre 3 y 5 opciones para que el usuario elija, o aceptar el título propuesto por él)
+2. Extensión (Relato corto/novela corta/novela; especificar el rango de recuento de palabras)
+3. Perspectiva narrativa (Tercera persona/primera persona/perspectiva dual; explicar ventajas y desventajas)
+4. Alcance de la historia (Enfoque en un periodo específico frente a la historia de toda una vida)
+5. Tono emocional (p. ej., de suspense, conmovedor, apasionado/enérgico, desenfadado, etc.)
+6. Estilo de escritura (Consultar la [Guía de selección de estilo de escritura] más abajo)
 
-【文风选择指南】
-文风是写作的核心规范，必须在创意阶段确定。常见选项：
+[Guía de selección de estilo de escritura]
+El estilo de escritura es una especificación fundamental de la obra y debe determinarse durante la fase creativa.
+``` Opciones comunes:
 
-A. 动词驱动型（推荐网文）
-   - 特点：短句、快节奏、信息密集、动作先行
-   - 禁用：形容词堆砌、长句从句、心理形容词
-   - 示例：《大奉打更人》《诡秘之主》
-   - 适用：悬疑、权谋、生存类
+A. Estilo basado en verbos (Recomendado para novelas web)
+- Características: Oraciones cortas, ritmo ágil, alta densidad de información, enfoque centrado en la acción
+- Evitar: Acumulación de adjetivos, cláusulas largas o complejas, adjetivos que describen estados internos
+- Ejemplos: *Da Feng Watchman* (大奉打更人), *Lord of the Mysteries* (诡秘之主)
+- Adecuado para: Suspense, intriga política, géneros de supervivencia
 
-B. 克制典雅型
-   - 特点：情感内敛、留白艺术、古典韵味
-   - 禁用：直白抒情、现代口语、过度解释
-   - 示例：《琅琊榜》《庆余年》
-   - 适用：历史正剧、权谋、情感类
+B. Estilo sobrio y elegante
+- Características: Emoción contenida, el arte de "dejar espacio" (sutileza), encanto clásico
+- Evitar: Sentimentalismo excesivo, coloquialismos modernos, explicaciones redundantes
+- Ejemplos: *Nirvana in Fire* (琅琊榜), *Joy of Life* (庆余年)
+- Adecuado para: Drama histórico, intriga política, historias emotivas o centradas en los personajes
 
-C. 幽默吐槽型
-   - 特点：主角内心戏丰富、现代梗、轻松化解紧张
-   - 禁用：过度煽情、沉重压抑
-   - 示例：《我师兄实在太稳健了》《大奉打更人》
-   - 适用：爽文、穿越、系统流
+C. Estilo humorístico e ingenioso
+- Características: Monólogo interno rico, memes modernos, tensión aliviada mediante el humor
+- Evitar: Melodrama excesivo, atmósfera pesada u opresiva
+- Ejemplos: *My Senior Brother is Too Steady* (我师兄实在太稳健了), *Da Feng Watchman*
+- Adecuado para: Historias gratificantes (*Shuangwen*), transmigración, género de "Sistema"
 
-D. 热血燃向型
-   - 特点：金句频出、情绪高涨、对抗性强
-   - 禁用：拖沓、犹豫、过度算计
-   - 示例：《斗破苍穹》《雪中悍刀行》
-   - 适用：玄幻、武侠、升级流
+D. Estilo intenso y apasionado
+- Características: Citas memorables frecuentes, alta intensidad emocional, conflicto fuerte
+- Evitar: Ritmo lento, vacilación, exceso de cálculos
+- Ejemplos: *Battle Through the Heavens* (斗破苍穹), *Sword Snow Stride* (雪中悍刀行)
+- Adecuado para: Fantasía (*Xuanhuan*), *Wuxia*, historias de progresión o subida de nivel
 
-E. 悬疑压抑型
-   - 特点：氛围营造、信息差、层层揭秘
-   - 禁用：过早解密、平铺直叙
-   - 示例：《诡秘之主》《盗墓笔记》
-   - 适用：悬疑、惊悚、探案类
+E. Estilo de suspense y opresivo
+- Características: Creación de atmósfera, asimetría de información, revelaciones graduales
+- Evitar: Revelaciones prematuras, narración plana o demasiado directa
+- Ejemplos: *Lord of the Mysteries*, *The Lost Tomb* (盗墓笔记)
+- Adecuado para: Suspense, *thriller*, géneros de detectives o misterio
 
-【文风规范模板】（确定后写入 project_info.md）
-- 文风类型：xxx型
-- 核心原则：（一句话概括）
-- 句式规范：（段落长度、句子长度）
-- 禁用词汇：（列出具体禁用词）
-- 心理描写：（如何表达）
-- 对话规范：（格式要求）
-- 章节钩子：（结尾要求）
+【Plantilla de especificación del estilo de escritura】 (Escribir en `project_info.md` una vez confirmado)
+- Tipo de estilo: estilo xxx
+- Principio fundamental: (Resumir en una oración)
+- Pautas de estructura de oraciones: (Longitud del párrafo, longitud de la oración)
+- Vocabulario prohibido: (Lista de palabras prohibidas específicas)
+- Monólogo interno/Descripción psicológica: (Cómo expresarlo)
+- Pautas de diálogo: (Requisitos de formato)
+- Ganchos de capítulo: (Requisitos para el final)
 
-状态锁（写入 status.md）：
-  "当前任务：等待用户确认{要素名称}"
-  每确认一个要素，更新：
-  "- [x] 书名已确认：xxx"
-  "- [x] 篇幅已确认：xxx"
-  "- [x] 文风已确认：xxx"
-  ...
+Bloqueo de estado (Escribir en `status.md`):
+"Tarea actual: Esperando confirmación del usuario sobre {Nombre del elemento}"
+Actualizar tras la confirmación de cada elemento: "- [x] Título del libro confirmado: xxx"
+"- [x] Longitud confirmada: xxx"
+"- [x] Estilo de escritura confirmado: xxx"
+...
 
-验证：
-  scripts/validate_step.py --step 1 --book-name "{书名}"
-  
-检查项：
-  □ status.md 中包含"书名已确认"
-  □ status.md 中包含"篇幅已确认"
-  □ status.md 中包含"视角已确认"
-  □ status.md 中包含"范围已确认"
-  □ status.md 中包含"基调已确认"
-  □ status.md 中包含"文风已确认"
-  □ project_info.md 中包含完整的【文风规范模板】
+Validación:
+scripts/validate_step.py --step 1 --book-name "{Título del libro}"
 
-阻断规则：六个要素全部确认后，才能进入 Step 2
-```
+Lista de verificación:
+□ status.md contiene "Título del libro confirmado"
+□ status.md contiene "Longitud confirmada"
+□ status.md contiene "Perspectiva confirmada"
+□ status.md contiene "Alcance confirmado"
+□ status.md contiene "Tono confirmado"
+□ status.md contiene "Estilo de escritura confirmado"
+□ project_info.md ​​contiene la [Plantilla de especificación del estilo de escritura] completa
 
-### Step 2: project_init ⚠️ 第一个强制阻断点
-```
-动作：创建项目目录
-命令：
-  mkdir -p ~/Documents/{书名}/{config,memory,chapters,deliverables}
-  echo "# {书名}" > ~/Documents/{书名}/config/project_info.md
-
-验证（必须全部通过）：
-  scripts/validate_step.py --step 2 --book-name "{书名}"
-  
-检查项：
-  □ 目录存在：~/Documents/{书名}/
-  □ 子目录齐全：config/, memory/, chapters/, deliverables/
-  □ project_info.md 存在且非空
-
-失败处理：报错并停止，不进入 Step 3
-检查点：验证通过后自动创建 step_2_complete.checkpoint
+Regla de bloqueo: Proceder al Paso 2 solo después de confirmar los seis elementos.
 ```
 
-### Step 3: world_building ⚠️ 第二个强制阻断点
+### Paso 2: project_init ⚠️ Primer punto de bloqueo obligatorio
 ```
-动作：构建世界观、人物设定
-产出（缺一不可）：
-  1. config/worldbuilding.md     - 时代背景、核心场景、制度礼仪
-  2. config/characters.md        - 主角、配角人物小传
-  3. memory/character_cards.md   - 结构化角色卡（YAML）
-  4. memory/relationship_map.md  - 人物关系图谱
+Acción: Crear directorio del proyecto
+Comando:
+mkdir -p ~/Documents/{Título del libro}/{config,memory,chapters,deliverables}
+echo "# {Título del libro}" > ~/Documents/{Título del libro}/config/project_info.md
 
-验证：
-  scripts/validate_step.py --step 3 --book-name "{书名}"
+Validación (todos deben cumplirse):
+scripts/validate_step.py --step 2 --book-name "{Título del libro}"
 
-检查项：
-  □ 四个文件全部存在
-  □ 每个文件字数 > 500
-  □ character_cards.md 包含至少3个角色的YAML结构
+Lista de verificación:
+□ El directorio existe: ~/Documents/{Título del libro}/
+□ Subdirectorios presentes: config/, memory/, chapters/, deliverables/
+□ project_info.md ​​existe y no está vacío
 
-失败处理：列出缺失文件，禁止进入 Step 4
-检查点：验证通过后创建 step_3_complete.checkpoint
+Gestión de fallos: Informar del error y detenerse; no pasar al Paso 3
+Punto de control: Crear automáticamente `step_2_complete.checkpoint` tras una validación exitosa
 ```
 
-### Step 4: volume_outline（卷纲设计）
+### Paso 3: world_building ⚠️ Segundo punto de bloqueo obligatorio
 ```
-动作：设计三卷主题、核心冲突、情感弧线
-产出：config/volume_outline.md
-确认：用户审阅并明确确认
+Acción: Elaborar la construcción del mundo y la configuración de los personajes
+Resultados (todos obligatorios):
+1. config/worldbuilding.md     - Época/entorno, ubicaciones clave, sistemas y normas de etiqueta
+2. config/characters.md        - Biografías de personajes (protagonistas y secundarios)
+3. memory/character_cards.md   - Fichas de personaje estructuradas (YAML)
+4. memory/relationship_map.md  - Mapa de relaciones entre personajes
 
-验证：
-  scripts/validate_step.py --step 4 --book-name "{书名}"
+Validación:
+scripts/validate_step.py --step 3 --book-name "{Book Name}"
 
-检查项：
-  □ volume_outline.md 存在
-  □ 包含至少3卷的规划
-  □ 用户已确认（status.md 中有确认记录）
+Verificaciones:
+□ Existen los cuatro archivos
+□ Recuento de palabras por archivo > 500
+□ `character_cards.md` contiene estructuras YAML para al menos 3 personajes
 
-检查点：确认后创建 step_4_complete.checkpoint
+Gestión de fallos: Listar los archivos faltantes; impedir avanzar al Paso 4
+Punto de control: Crear step_3_complete.checkpoint tras una validación exitosa
 ```
 
-### Step 5: volume_chapter_outline（整卷章节大纲）⚠️ 每卷开始前必须执行
+### Paso 4: volume_outline (Diseño del esquema de volúmenes)
 ```
-触发条件：
-  - 新项目开始第一卷
-  - 上一卷完成，进入下一卷
+Acción: Diseñar temas, conflictos centrales y arcos emocionales para tres volúmenes
+Resultado: config/volume_outline.md
+Confirmación: El usuario revisa y confirma explícitamente
 
-动作：为当前卷生成所有章节的情节概述
-产出：config/volume_{X}_chapter_outline.md
+Validación:
+scripts/validate_step.py --step 4 --book-name "{Nombre del libro}"
 
-【章节情节推进四大原则】⚠️ 绝对不可违反
+Verificaciones:
+□ Existe volume_outline.md
+□ Contiene planes para al menos 3 volúmenes
+□ Confirmado por el usuario (existe registro de confirmación en status.md)
 
-**原则一：因果链原则**
-- 每一章的危机必须从上一章的隐患发展而来
-- 禁止独立事件——每一章都必须承接上一章，不能凭空出现新危机
-- 格式要求：每章细纲必须写明"危机来源"（来自上一章的哪个隐患）
+Punto de control: Crear step_4_complete.checkpoint tras la confirmación
+```
 
-**原则二：抉择+代价原则**
-- 主角每章必须做出明确的抉择（不是被动承受，而是主动选择）
-- 每个抉择都有代价，这个代价成为下一章的危机
-- 格式要求：每章细纲必须写明"主角抉择"和"埋下隐患"
+### Paso 5: volume_chapter_outline (Esquema completo de capítulos del volumen) ⚠️ Debe ejecutarse antes de comenzar cada volumen
+```
+Condiciones de activación:
+- Inicio del primer volumen de un nuevo proyecto
+- Finalización del volumen anterior y paso al siguiente
 
-**原则三：升级递进原则**
-- 危机必须层层升级，像一根绳子越绷越紧
-- 从"可能暴露"→"即将暴露"→"已经暴露"逐步推进
-- 禁止同一级别的危机重复出现
+Acción: Generar resúmenes de la trama para todos los capítulos del volumen actual
+Resultado: config/volume_{X}_chapter_outline.md
 
-**原则四：节奏权重原则** ⚠️ 用章节数量体现节奏
-- **过渡阶段**：快速推进，每年/每件事只用1章，甚至合并多件事到1章
-- **铺垫阶段**：积累张力，每章比前一章更接近危机核心
-- **高潮阶段**：详细展开，一个大事件拆成3-6章，占全卷40%以上篇幅
-- **结尾阶段**：情感释放，快速收尾，每章解决一个问题
+【Cuatro principios fundamentales de la progresión de la trama por capítulos】 ⚠️ No deben infringirse
 
-【权重标记规范】
-| 权重 | 含义 | 章节数建议 | 用途 |
+**Principio 1: Principio de cadena de causalidad**
+- La crisis de cada capítulo debe surgir de un problema latente del capítulo anterior
+- No debe haber eventos aislados; cada capítulo debe derivar del anterior; no pueden aparecer nuevas crisis de la nada
+- Requisito de formato: Los esquemas detallados de cada capítulo deben especificar la "Fuente de la crisis" (de qué problema latente del capítulo anterior se origina)
+
+**Principio 2: Principio de elección y coste**
+- El protagonista debe tomar una decisión clara en cada capítulo (elección activa, no resistencia pasiva)
+- Toda elección conlleva un coste; este coste se convierte en la crisis del siguiente capítulo
+- Requisito de formato: Los esquemas detallados de cada capítulo deben especificar la "Elección del protagonista" y el "Problema latente sembrado"
+
+**Principio 3: Principio de escalada/progresión**
+- La crisis debe intensificarse por etapas, tensándose como una cuerda que se tira con fuerza.
+- Progresión secuencial: "exposición potencial" → "exposición inminente" → "exposición real".
+- No repetir el mismo nivel de crisis.
+
+**Principio 4: Ritmo y peso narrativo** ⚠️ Utiliza el número de capítulos para reflejar el ritmo.
+- **Fase de transición**: Avanza con rapidez; dedica solo un capítulo por año o evento, o incluso combina varios sucesos en un único capítulo.
+- **Fase de acumulación**: Aumenta la tensión; cada capítulo acerca la historia al núcleo de la crisis más que el anterior.
+- **Fase de clímax**: Desarrolla con detalle; divide un evento importante en 3 a 6 capítulos, ocupando más del 40 % de la extensión total del volumen.
+- **Fase de resolución**: Liberación emocional y cierre rápido; resuelve un asunto por capítulo.
+
+【Estándares de peso narrativo】
+| Peso | Significado | Cantidad de capítulos sugerida | Propósito |
 |-----|------|-----------|------|
-| ⭐ | 过渡 | 1章/年或更少 | 时间推进、日常交代 |
-| ⭐⭐ | 铺垫 | 1-2章 | 张力积累、危机初现 |
-| ⭐⭐⭐ | 转折 | 2-3章 | 重大变化、局势恶化 |
-| ⭐⭐⭐⭐ | 高潮前奏 | 3-4章 | 决战准备、正面对峙 |
-| ⭐⭐⭐⭐⭐ | 大高潮 | 4-6章 | 全书最精彩段落，详细展开 |
+| ⭐ | Transición | 1 capítulo/año o menos | Avanzar en el tiempo, establecer la vida cotidiana |
+| ⭐⭐ | Acumulación | 1–2 capítulos | Acumular tensión, señales iniciales de crisis |
+| ⭐⭐⭐ | Punto de inflexión | 2–3 capítulos | Cambios importantes, agravamiento de la situación |
+| ⭐⭐⭐⭐ | Preclímax | 3–4 capítulos | Preparación para el enfrentamiento final, confrontación directa |
+| ⭐⭐⭐⭐⭐ | Gran clímax | 4–6 capítulos | El punto culminante del libro; desarrollo detallado |
 
-【细纲格式要求】
-每章必须包含以下要素：
+【Requisitos de formato para el esquema detallado】
+Cada capítulo debe incluir los siguientes elementos:
 ```
-第X章：章节标题
-- 时间：具体时间点
-- 权重：⭐-⭐⭐⭐⭐⭐
-- 危机来源：来自上一章的哪个隐患
-- 核心冲突：本章要解决什么问题
-- 主角抉择：主角做了什么选择
-- 埋下隐患：这个抉择埋下了什么新危机
-- 接下一章：如何引出下一章
-```
-
-【强制约束】⚠️ 绝对不可违反
-  1. **只写当前卷内容**：严格限定在 volume_outline.md 中定义的当前卷时间范围和情节内
-  2. **不写上一卷内容**：前一卷的情节只在"前情衔接"中简要提及，不重复展开
-  3. **不写下一卷内容**：下一卷的情节完全不留入当前卷细纲
-  4. **做好卷间衔接**：
-     - 当前卷首章：简要说明承接自上一卷的什么状态
-     - 当前卷末章：明确结尾状态，为下一卷做好铺垫
-  5. **时间线清晰**：每章的时间点必须落在当前卷定义的时间范围内
-
-违规示例（禁止）：
-  ❌ 第一卷细纲中出现第二卷"掖庭岁月"的章节
-  ❌ 第一卷末章直接写到登基（这是第三卷内容）
-  ❌ 当前卷细纲中出现"详见下一卷"的依赖
-
-正确示例：
-  ✅ 第一卷末章：刘病已获赦出狱，结束在掖庭门口（为第二卷铺垫）
-  ✅ 第二卷首章：从掖庭生活开始，简要提及"前年获赦"
-
-流程：
-  1. 读取 config/volume_outline.md，了解本卷主题和情节范围
-  2. 【检查时间边界】确认本卷的起止时间，绝不越界
-  3. 根据本卷章节数量，为每章分配情节
-  4. 【自查】检查是否有超出本卷范围的内容
-  5. 写入 config/volume_{X}_chapter_outline.md
-  6. ⚠️【自动审查循环】调用 scripts/validate_volume_outline.py 进行审查
-     - 使用优秀网文 10 大标准审查大纲
-     - 审查不通过时，自动调用大模型修改
-     - 循环执行"审查→修改→再审查"，最多 5 次
-     - 审查通过后，才能进入下一步
-  7. 用户确认后才能进入 Step 6
-
-验证：
-  scripts/validate_step.py --step 5 --book-name "{书名}" --volume {X}
-
-检查项：
-  □ volume_{X}_chapter_outline.md 存在
-  □ scripts/validate_volume_outline.py 执行成功
-  □ 审查结果为"通过"（或有审查报告）
-  □ 用户已确认
-  □ 包含本卷所有章节的情节概述
-  □ 【新增】无上一卷内容的重复展开
-  □ 【新增】无下一卷内容的提前泄露
-  □ 【新增】时间线完全在本卷范围内
-  □ 用户已确认
-
-检查点：确认后创建 volume_{X}_outline_complete.checkpoint
+Capítulo X: Título del capítulo
+- Tiempo: Momento específico en el tiempo
+- Peso: ⭐–⭐⭐⭐⭐⭐
+- Fuente de la crisis: ¿Qué amenaza oculta del capítulo anterior?
+- Conflicto central: ¿Qué asunto se resuelve en este capítulo?
+- Decisión del protagonista: ¿Qué decisión toma el protagonista?
+- Semillas del conflicto: ¿Qué nueva crisis genera esta decisión?
+- Enlace: ¿Cómo se conecta con el siguiente capítulo?
 ```
 
-### Step 6: chapter_loop（逐章循环）
+【Restricciones obligatorias】 ⚠️ Prohibido incumplirlas
+1. **Escribir solo el contenido del volumen actual**: Limitarse estrictamente al marco temporal y a la trama definidos en `volume_outline.md`.
+2. **No incluir contenido del siguiente volumen**: Los puntos de la trama del próximo volumen quedan totalmente excluidos del esquema detallado del volumen actual. 4. **Asegura transiciones fluidas entre volúmenes**:
+- Capítulo inicial del volumen actual: Explica brevemente la situación tal como continúa desde el volumen anterior.
+- Capítulo final del volumen actual: Definir claramente la situación final y preparar el terreno para el siguiente volumen.
+5. **Cronología clara**: La marca temporal de cada capítulo debe situarse dentro del marco temporal definido para el volumen actual.
+
+Ejemplos de infracción (prohibido):
+❌ Incluir capítulos pertenecientes a los "Años en los aposentos del servicio del palacio" (Volumen 2) en el esquema detallado del Volumen 1.
+❌ Escribir el capítulo final del Volumen 1 abarcando el ascenso al trono (esto corresponde al Volumen 3).
+❌ Incluir referencias de dependencia como "ver detalles en el siguiente volumen" dentro del esquema del volumen actual.
+
+Ejemplos correctos:
+✅ Capítulo final del Volumen 1: Liu Bingyi es indultado y liberado de prisión; el capítulo termina a las puertas de los aposentos del servicio del palacio (preparando el escenario para el Volumen 2).
+✅ Primer capítulo del Volumen 2: Comienza con la vida en los aposentos del servicio del palacio, mencionando brevemente el indulto recibido "hace dos años".
+
+Proceso:
+1. Leer `config/volume_outline.md` para comprender la temática y el alcance argumental del volumen.
+2. [Verificar límites temporales] Confirmar los momentos de inicio y fin del volumen; respetar estrictamente estos límites.
+3. Asignar puntos de la trama a cada capítulo según el número total de capítulos del volumen.
+4. [Autoverificación] Comprobar si hay contenido que exceda el alcance del volumen actual.
+5. Escribir en `config/volume_{X}_chapter_outline.md`.
+6. ⚠️ [Ciclo de revisión automatizada] Ejecutar `scripts/validate_volume_outline.py` para la revisión.
+- Revisar el esquema comparándolo con los "10 estándares principales para excelentes novelas web".
+- Si la revisión falla, invocar automáticamente un Modelo de Lenguaje Extenso (LLM) para realizar revisiones.
+- Repetir el ciclo "Revisar → Corregir → Volver a revisar" hasta 5 veces.
+- Pasar al siguiente paso solo tras superar la revisión.
+7. Pasar al paso 6 solo tras la confirmación del usuario. Verificación:
+`scripts/validate_step.py --step 5 --book-name "{Book Title}" --volume {X}`
+
+Lista de comprobación:
+□ El archivo `volume_{X}_chapter_outline.md` existe.
+□ `scripts/validate_volume_outline.py` se ejecutó correctamente.
+□ El resultado de la revisión es "Aprobado" (o hay un informe de revisión disponible).
+□ El usuario ha confirmado.
+□ Incluye resúmenes de la trama para todos los capítulos del volumen.
+□ [Nuevo] Sin expansión repetitiva de contenido del volumen anterior.
+□ [Nuevo] Sin revelación prematura de contenido del siguiente volumen. 
+□ [Nuevo] La cronología se sitúa totalmente dentro del alcance del volumen actual.
+□ El usuario ha confirmado.
+
+Punto de control: Crear tras la confirmación. `volume_{X}_outline_complete.checkpoint`
 ```
-进入时检查：
-  - 是否是本卷第一章？
-  - 是否已存在本卷的 volume_{X}_chapter_outline.md？
-  - 如果不存在，先执行 Step 5
 
-进入时更新 status.md：
-  "当前任务：第{X}卷第{Y}章 - 等待章纲讨论"
+### Paso 6: chapter_loop (Bucle capítulo a capítulo)
+```
+Comprobaciones al inicio:
+- ¿Es este el primer capítulo del volumen?
+- ¿Existe ya el archivo `volume_{X}_chapter_outline.md` para este volumen?
+- Si no es así, ejecutar primero el Paso 5.
 
-├─ 6.1: chapter_outline（单章章纲）
-│   【前置检查】
-│     1. 读取 config/volume_{X}_chapter_outline.md，确认本章情节
-│     2. 如果不是第一章，读取前一章 chapters/vol{X}_chapter_{Y-1}.md
-│     3. 【连续性检查】确认与前章的时间线、人物状态、情节衔接
-│        - 时间：本章是前章的什么时候？（当日/次日/数日后）
-│        - 人物：前章结束时的位置、状态是否与本章开头一致？
-│        - 情节：前章的结尾是否有伏笔需要在本章回收？
-│   【节奏约束】严格按照章节大纲写作，禁止压缩或扩展
-│   
-│   产出：memory/chapter_{X}_{Y}_outline.md
-│   验证：文件存在 + 字数 > 300
-│   
-│   【强制确认】⚠️ 必须执行
-│     - 创建章纲后，必须停下来向用户展示章纲内容
-│     - 明确询问："请确认章纲，确认后开始写作"
-│     - 用户确认后，更新 status.md = "第{X}卷第{Y}章 - 章纲已确认，等待写作"
-│     - ❌ 禁止：未确认就直接进入 Step 6.2 写作
+Actualizar `status.md` al inicio:
+"Tarea actual: Volumen {X}, Capítulo {Y} - A la espera de la discusión sobre el esquema del capítulo"
+
+├─ 6.1: chapter_outline (Esquema del capítulo individual)
+│   【Comprobación previa】
+│     1. Leer `config/volume_{X}_chapter_outline.md` para confirmar la trama de este capítulo.
+│     2. Si no es el primer capítulo, leer el capítulo anterior: `chapters/vol{X}_chapter_{Y-1}.md`.
+│     3. 【Comprobación de continuidad】 Verificar la coherencia con el capítulo anterior en cuanto a cronología, estado de los personajes y progresión de la trama.
+│        - Tiempo: ¿Cuándo transcurre este capítulo en relación con el anterior? (Mismo día / Día siguiente / Días después)
+│        - Personajes: ¿Coinciden la ubicación y el estado al final del capítulo anterior con el inicio de este capítulo?
+│        - Trama: ¿Hay elementos de anticipación (foreshadowing) del final del capítulo anterior que deban resolverse en este capítulo?
+│   【Restricción de ritmo】 Escribir estrictamente siguiendo el esquema del capítulo; No comprimir ni expandir el contenido.
 │
-├─ 6.2: chapter_write（章节写作）
-│   前置：检查 status.md 状态必须是"章纲已确认"
-│   
-│   【验证脚本】⚠️ 写作前必须通过
-│     python3 scripts/validate_outline_confirmation.py <书名> <章节号>
-│     - 验证失败 = 阻断流程，必须先确认章纲
-│   
-│   【上下文准备】⚠️ 写作前必须读取以下内容
-│   
-│   1. 章节大纲定位：config/volume_{X}_chapter_outline.md
-│      - 读取前三章（第Y-3、Y-2、Y-1章）的情节概述（如果存在）
-│      - 读取本章（第Y章）的情节概述
-│      - 读取后三章（第Y+1、Y+2、Y+3章）的情节概述（如果存在）
-│      - ⚠️ 明确边界：本章写什么，前几章已写什么，后几章要写什么
-│      - ⚠️ 避免重复：不要写前几章已写的内容
-│      - ⚠️ 避免超前：不要提前写后几章的内容
-│   
-│   2. 前一章完整内容（如果不是第一章）：chapters/vol{X}_chapter_{Y-1}.md
-│      - 已包含结尾，无需额外读取
-│      - 确保时间线衔接、人物状态一致
-│   
-│   3. 角色卡：memory/character_cards.md（本章出场角色）
-│   
-│   4. 伏笔追踪：memory/foreshadowing.md（如有）
-│   
-│   5. 【文风规范】⚠️ 必须读取并严格遵守
-│      读取：config/project_info.md 中的【文风规范模板】
-│      - 文风类型：确认本章使用的文风
-│      - 句式规范：段落长度、句子长度
-│      - 禁用词汇：绝对禁止使用
-│      - 心理描写：按文风要求表达
-│      - 对话规范：格式必须符合
-│      - 章节钩子：结尾必须留下钩子
-│      
-│      【文风检查清单】（写作时自检）
-│      □ 每段不超过3句话
-│      □ 每句话不超过15个字
-│      □ 没有使用禁用词汇
-│      □ 心理描写用动作/场景表达，不用形容词
-│      □ 对话一句一换行，最多两句
-│      □ 章节结尾有强钩子
-│      □ 每100字有新信息或新动作
-│   
-│   【范围约束】⚠️ 必须遵守
-│     - 只写本章大纲规定的内容
-│     - 不要写前章已写的内容
-│     - 不要提前写后章的内容
-│     - 结尾要留有悬念，为下一章铺垫
-│   
-│   产出：chapters/vol{X}_chapter_{Y}.md
-│   字数：3000-4000字（强制）
-│   
-│   【写作原则】⚠️ 必须遵守
-│   
-│   【去AI味强制要求】⚠️ 绝对禁止以下AI特征句式
-│   
-│   一、禁止"不是……而是……"句式
-│     - ❌ 绝对禁止："不是……而是……"、"并非……而是……"、"与其说是……不如说是……"
-│     - ❌ 错误示例："他不是害怕，而是愤怒"、"这不是结束，而是开始"
-│     - ✅ 正确写法：直接用动作和神态表现，"他握紧拳头，额头青筋暴起"
-│     - ✅ 正确写法：用具体场景呈现，"门关上，新的风暴才刚刚开始"
-│   
-│   二、禁止其他AI特征表达
-│     - ❌ 禁止："从某种意义上说"、"从某种角度来看"、"换句话说"
-│     - ❌ 禁止："值得注意的是"、"关键在于"、"核心在于"
-│     - ❌ 禁止："一方面……另一方面……"、"既……又……"（过度使用）
-│     - ❌ 禁止："正如……所说"、"就像……一样"（过度比喻）
-│     - ❌ 禁止："或许"、"也许"、"可能"（过度使用弱化确定性）
-│     - ❌ 禁止："突然"、"忽然"、"猛然"（过度使用制造紧张）
-│     - ❌ 禁止："然而"、"但是"、"可是"（每段都用转折）
-│     - ❌ 禁止："最终"、"最后"、"结局是"（过度总结）
-│   
-│   一、画面感优先
-│     - 用细节和场景描写，让读者"看到"而不是"被告知"
-│     - ❌ 错误：他很紧张。
-│     - ✅ 正确：他的手指不自觉地敲击着桌面，额头上渗出细密的汗珠。
-│     - 用五感：视觉、听觉、嗅觉、触觉、味觉
-│   
-│   二、代入感营造
-│     - 让读者身临其境，感受人物的情绪和处境
-│     - 描写环境氛围：光线、温度、气味、声音
-│     - 通过人物的感官体验来传递信息
-│   
-│   三、冲突张力
-│     - 每一场景都要有冲突或悬念
-│     - 冲突类型：人与人的冲突、人与环境的冲突、内心的冲突
-│     - 场景结束时留下悬念或钩子
-│   
-│   四、对话有戏
-│     - 对话要推动情节，揭示人物性格
-│     - ❌ 错误："你觉得怎么样？""我觉得不太好。"
-│     - ✅ 正确："你觉得怎么样？"他端起茶杯，目光却没落在对方身上。
-│     - 用动作和神态打断对话，避免"你一句我一句"
-│     - 对话中要有潜台词，不要把所有意思都说出来
-│   
-│   五、节奏控制
-│     - 长短句交替，避免单调
-│     - 动作场景用短句，营造紧张感
-│     - 情感场景用长句，营造氛围
-│     - 段落不要过长，便于阅读
-│   
-│   六、留白艺术
-│     - 不要把所有东西都写出来
-│     - 让读者自己想象和推理
-│     - 用暗示代替直说
-│   
-│   七、开场抓人
-│     - 开头就要有钩子
-│     - 可以用：悬念、冲突、对话、场景
-│     - 避免开头就大段背景介绍
-│   
-│   八、情感共鸣
-│     - 让读者关心人物的命运
-│     - 展现人物的脆弱和困境
-│     - 用具体的事件而不是抽象的描述
-│   
-   
-   九、结尾钩子 ⚠️ 必须为下一章留下钩子
-     - 结尾必须与下一章紧密衔接，为下一章留下明确的钩子
-     - 钩子类型：
-       - 悬念钩子：一个未解决的问题（"门外传来脚步声，是谁？"）
-       - 行动钩子：人物即将采取的行动（"他站起身，走向狱门"）
-       - 对话钩子：以对话结束，暗示即将发生的事（"'大人，使者到了。'"）
-       - 消息钩子：一个重要消息传来（"甘泉宫传来消息，望气者发现异常天象"）
-       - 场景钩子：场景转换，暗示变化（"远处，马蹄声渐近"）
-     - 结尾要具体，不要泛泛而谈（❌ "风暴要来了" → ✅ "远处传来马蹄声，郭穰的人马到了"）
-     - 结尾要指向下一章的具体事件，让读者想知道"接下来会发生什么"
-     - 不要总结本章，而要开启下一章的悬念
-│   验证（必须全部通过）：
-│     1. 基础验证：
-│        scripts/validate_step.py --step 6 --chapter {X}_{Y} --book-name "{书名}"
-│        □ 文件存在
-│        □ 字数在 3000-4000 范围内
-│        □ 开场有标点符号/对话
-│        □ 包含感官描写
-│        □ 包含对话
-│     
-│     2. ⚠️【新增】优秀网文10大标准审查（强制）：
-│        scripts/validate_chapter_quality.py "{书名}" "{X}_{Y}"
-│        □ 开场抓人 (2分) - 前3段有悬念/冲突/情绪
-│        □ 节奏紧凑 (2分) - 每3-5段有小高潮
-│        □ 每章有冲突 (2分) - 至少2个冲突
-│        □ 人物有动机 (2分) - 主角和反派动机清晰
-│        □ 对话有戏 (2分) - 对话推动情节，有潜台词
-│        □ 结尾有钩子 (2分) - 为下一章留悬念
-│        □ 信息密度 (2分) - 每100字有新信息
-│        □ 画面感 (2分) - 五感描写
-│        □ 情感真实 (2分) - 情感有层次
-│        □ 去AI味 (2分) - 自然流畅，无AI痕迹
-│        
-│        评分标准：
-│        - 80-100% (16-20分)：优秀 🌟
-│        - 60-79% (12-15分)：良好 ✅ 可通过
-│        - 40-59% (8-11分)：及格 ⚠️ 建议修改
-│        - <40% (<8分)：不及格 ❌ 必须重写
-│   
-│   更新：status.md = "第{X}卷第{Y}章 - 已完成，等待审阅"
-│   检查点：创建 chapter_{X}_{Y}_complete.checkpoint
-│   ⚠️ 完成后立即执行 6.3，不可跳过
+│   Salida: memory/chapter_{X}_{Y}_outline.md
+│   Verificación: El archivo existe + recuento de palabras > 300
 │
-├─ 6.3: character_check（角色检查）⚠️ 每章完成后强制执行
-│   【触发时机】Step 6.2 完成后立即自动执行，不可跳过
-│   【动作】检查本章出场人物，为新角色创建角色卡
-│   【流程】
-│     1. 【提取人物】分析本章内容，提取所有出场人物名单
-│     2. 【对照角色卡】读取 memory/character_cards.md，标记没有角色卡的人物
-│     3. 【判断重要性】对于没有角色卡的人物：
-│        - 读取 config/volume_outline.md（卷纲）
-│        - 读取 config/volume_{X}_chapter_outline.md（本卷细纲）
-│        - 搜索该人物名字，判断是否在后续章节出现
-│        - 如果出现 ≥2 次 → 重要角色，必须创建角色卡
-│        - 如果只出现1次 → 工具人，可选创建
-│     4. 【创建角色卡】为重要角色创建角色卡，包含：
-│        - id: 拼音ID
-│        - name: 姓名
-│        - roles: 身份列表
-│        - significance: 在故事中的作用
-│        - key_events: 关键事件（可选）
-│     5. 【更新关系图】如有新的人物关系，更新 relationship_map.md
-│   【产出】更新 memory/character_cards.md（如需要）
-│   【验证】确认所有重要角色都有角色卡
-│   【完成后】进入 6.4 等待用户审阅
+│   【Confirmación obligatoria】⚠️ Debe ejecutarse
+│     - Tras crear el esquema del capítulo, debe hacer una pausa y presentar el contenido del esquema al usuario.
+│     - Pregunte explícitamente: "Por favor, confirme el esquema del capítulo; la redacción comenzará tras la confirmación".
+│     - Una vez confirmada por el usuario, actualice status.md a: "Volumen {X} Capítulo {Y} - Esquema confirmado, a la espera de redacción".
+│     - ❌ Prohibido: Pasar directamente al paso 6.2 (redacción) sin confirmación.
 │
-├─ 6.4: user_review（用户审阅）
-│   满意 → 进入下一章
-│   修改 → 返回 6.1 或 6.2
-│   进化：写入 lessons_learned.md（用户修改意见、改进方向）
+├─ 6.2: chapter_write (Redacción del capítulo)
+│   Requisito previo: Comprobar status.md; el estado debe ser "Esquema confirmado".
 │
-└─ 6.5: volume_complete（卷完成判断）
-    本卷未完 → 回到 6.1，讨论下一章
-    本卷结束 → 用户确认，创建卷检查点，进入下一卷（Step 5）
+│   【Script de validación】⚠️ Debe superarse antes de redactar
+│     python3 scripts/validate_outline_confirmation.py <BookTitle> <ChapterNumber>
+│     - Fallo en la validación = Proceso detenido; primero debe confirmarse el esquema del capítulo.
+│
+│   【Preparación del contexto】⚠️ Debe leer el siguiente contenido antes de redactar
+│
+│   1. Ubicación del esquema del capítulo: config/volume_{X}_chapter_outline.md
+│      - Leer los resúmenes de la trama de los tres capítulos anteriores (Capítulos Y-3, Y-2, Y-1), si existen.
+│      - Leer el resumen de la trama del capítulo actual (Capítulo Y).
+│      - Leer los resúmenes de la trama de los tres capítulos siguientes (Capítulos Y+1, Y+2, Y+3), si existen.
+│      - ⚠️ Definir límites: Qué escribir en este capítulo, qué se ha escrito en capítulos anteriores y qué está planeado para capítulos futuros.
+│      - ⚠️ Evitar repeticiones: No escribir contenido ya tratado en capítulos anteriores.
+│      - ⚠️ Evitar adelantarse: No escribir contenido destinado a capítulos futuros.
+│
+│   2. Contenido completo del capítulo anterior (a menos que sea el primer capítulo): chapters/vol{X}_chapter_{Y-1}.md
+│      - Ya incluye el final; no se requiere lectura adicional.
+│      - Asegurar la continuidad temporal y la coherencia en el estado de los personajes.
+│
+│   3. Fichas de personajes: memory/character_cards.md (Personajes que aparecen en este capítulo)
+│
+│   4. Registro de presagios: memory/foreshadowing.md (Si corresponde)
+│
+│   5. [Directrices de estilo de escritura] ⚠️ Deben leerse y seguirse estrictamente
+│      Leer: [Plantilla de estilo de escritura] en config/project_info.md
+│      - Tipo de estilo: Confirmar el estilo utilizado para este capítulo
+│      - Estructura de las oraciones: Longitud de los párrafos y de las oraciones
+│      - Vocabulario prohibido: Estrictamente prohibido
+│      - Monólogo interno/Descripción psicológica: Expresar según los requisitos de estilo
+│      - Directrices de diálogo: El formato debe cumplir con lo establecido
+│      - Gancho del capítulo: Debe incluir un elemento de intriga o gancho al final
+│
+│      [Lista de verificación de estilo de escritura] (Autocontrol durante la redacción)
+│      □ No más de 3 oraciones por párrafo
+│      □ No más de 15 palabras por oración
+│      □ Sin uso de vocabulario prohibido
+│      □ Estados internos expresados ​​mediante acciones o escenas, no adjetivos
+│      □ Diálogo: Línea nueva para cada intervención hablada; máximo dos oraciones por turno
+│      □ Gancho potente al final del capítulo
+│      □ Nueva información o acción cada 100 caracteres
+│
+│   [Restricciones de alcance] ⚠️ Deben respetarse
+│     - Escribir solo el contenido especificado en el esquema de este capítulo
+│     - No escribir contenido ya tratado en capítulos anteriores
+│     - No escribir contenido destinado a capítulos futuros
+│     - Terminar con suspenso para preparar el siguiente capítulo
+│
+│   Salida: chapters/vol{X}_chapter_{Y}.md
+│   Extensión: 3000-4000 caracteres (Obligatorio)
+│
+│   [Principios de escritura] ⚠️ Deben respetarse
+│
+│   [Requisito obligatorio: Eliminar "ismos de IA"] ⚠️ Quedan estrictamente prohibidas las siguientes estructuras oracionales características de la IA
+│
+│   I. Prohibición de estructuras tipo "No X, sino Y"
+│     - ❌ Estrictamente prohibido: "No X, sino Y", "No es realmente X, sino Y", "Más que X, es Y"
+│     - ❌ Ejemplos incorrectos: "No tenía miedo, sino ira"; "Esto no es el final, sino el comienzo"
+│     - ✅ Enfoque correcto: Transmitir mediante acciones y expresiones; p. ej., "Apretó los puños, con las venas hinchadas en la frente".
+│     - ✅ Enfoque correcto: Presentar mediante escenas concretas; p. ej., "La puerta se cerró; una nueva tormenta estaba a punto de comenzar".
+│
+│   II. Expresiones típicas de la IA prohibidas
+│     - ❌ Prohibido: "En cierto sentido", "Desde cierta perspectiva", "En otras palabras"
+│     - ❌ Prohibido: "Cabe destacar que", "La clave reside en", "En el fondo se trata de"
+│     - ❌ Prohibido: "Por un lado... por otro lado...", "Tanto... como..." (uso excesivo)
+│     - ❌ Prohibido: "Como dijo [alguien]", "Tal como..." (uso excesivo de metáforas o símiles)
+│     - ❌ Prohibido: "Quizás", "Tal vez", "Posiblemente" (uso excesivo que debilita la certeza)
+│     - ❌ Prohibido: "De repente", "Súbitamente", "Abruptamente" (uso excesivo para crear tensión artificial)
+│     - ❌ Prohibido: "Sin embargo", "Pero", "No obstante" (introducir un contraste o giro en cada párrafo)
+│     - ❌ Prohibido: "En última instancia", "Finalmente", "El resultado es" (resúmenes excesivos)
+│
+│   I. Priorizar las imágenes visuales
+│     - Utiliza detalles y descripciones de la escena para permitir que los lectores "vean" en lugar de que se les "cuente"
+│     - ❌ Incorrecto: Estaba nervioso.
+│     - ✅ Correcto: Sus dedos tamborileaban involuntariamente sobre la mesa y finas gotas de sudor se formaban en su frente. │     - Involucra los cinco sentidos: vista, oído, olfato, tacto y gusto
+│
+│   II. Crear inmersión
+│     - Sitúa al lector en la escena; permítele sentir las emociones y situaciones de los personajes
+│     - Describe la atmósfera: iluminación, temperatura, olores y sonidos
+│     - Transmite información a través de las experiencias sensoriales de los personajes
+│
+│   III. Conflicto y tensión
+│     - Cada escena debe contener conflicto o suspenso
+│     - Tipos de conflicto: interpersonal, persona contra el entorno y conflicto interno
+│     - Termina la escena con un final en suspenso (*cliffhanger*) o un gancho narrativo
+│
+│   IV. Diálogo atractivo
+│     - El diálogo debe hacer avanzar la trama y revelar rasgos de los personajes
+│     - ❌ Incorrecto: "¿Qué opinas?" "No creo que sea muy bueno."
+│     - ✅ Correcto: "¿Qué opinas?" Tomó su taza de té, aunque su mirada no se posó en la otra persona. │     - Interrumpir el diálogo con acciones y expresiones para evitar un ritmo repetitivo de «ida y vuelta».
+│     - Incluir subtexto en el diálogo; no explicar explícitamente cada significado.
+│
+│   V. Control del ritmo
+│     - Alternar entre oraciones largas y cortas para evitar la monotonía.
+│     - Usar oraciones cortas en escenas de acción para generar tensión.
+│     - Usar oraciones largas en escenas emocionales para establecer la atmósfera.
+│     - Mantener los párrafos concisos para facilitar la lectura.
+│
+│   VI. El arte del «espacio en blanco» (sutileza)
+│     - No escribir todo de forma explícita.
+│     - Permitir que los lectores usen su imaginación y hagan inferencias.
+│     - Usar insinuaciones y sugerencias en lugar de afirmaciones directas.
+│
+│   VII. Un inicio cautivador
+│     - Incluir un «gancho» justo al principio.
+│     - Opciones: suspenso, conflicto, diálogo o una escena específica.
+│     - Evitar comenzar con una larga exposición de antecedentes.
+│
+│   VIII. Resonancia emocional
+│     - Lograr que a los lectores les importe el destino de los personajes.
+│     - Revelar las vulnerabilidades y los dilemas de los personajes.
+│     - Usar eventos concretos en lugar de descripciones abstractas.
+│
+
+IX. Gancho final ⚠️ Debe dejar un gancho para el siguiente capítulo
+- El final debe conectar estrechamente con el siguiente capítulo, dejando un gancho claro.
+- Tipos de ganchos:
+- Gancho de suspenso: Una pregunta sin resolver («Pasos tras la puerta... ¿quién será?»).
+- Gancho de acción: Una acción inminente de un personaje («Se puso en pie y caminó hacia la puerta de la prisión»).
+- Gancho de diálogo: Terminar con un diálogo que insinúe lo que está por venir («—Mi señor, el emisario ha llegado»).
+- Gancho de noticias: Entrega de información importante («Llegaron noticias del Palacio Ganquan: el adivino había avistado un presagio celestial inusual»).
+- Gancho de escena: Un cambio de escena que insinúe una transformación («A lo lejos, el sonido de cascos se acercaba»).
+- Ser específico; evita las generalizaciones (❌ "Se acerca una tormenta" → ✅ "Se oye el galope de cascos; las tropas de Guo Rang han llegado").
+- Apunta a eventos específicos del próximo capítulo, haciendo que los lectores se pregunten «qué pasará después».
+- No resumas el capítulo actual; en su lugar, genera suspense para el siguiente.
+│   Verificación (todos los puntos deben cumplirse):
+│     1. Validación básica:
+│        scripts/validate_step.py --step 6 --chapter {X}_{Y} --book-name "{Book Title}"
+│        □ El archivo existe
+│        □ Recuento de palabras en el rango de 3000 a 4000
+│        □ El inicio presenta puntuación o diálogo
+│        □ Incluye descripciones sensoriales
+│        □ Incluye diálogo
+│
+│     2. ⚠️ [Nuevo] Revisión según los 10 estándares para novelas web excelentes (obligatorio):
+│        scripts/validate_chapter_quality.py "{Book Title}" "{X}_{Y}"
+│        □ Inicio atractivo (2 puntos): suspense, conflicto o intriga en los primeros 3 párrafos
+Introducción
+│        □ Ritmo ágil (2 pts) - Un clímax menor cada 3-5 párrafos
+│        □ Conflicto en cada capítulo (2 pts) - Al menos 2 conflictos
+│        □ Motivación de los personajes (2 pts) - Motivaciones claras para el protagonista y el antagonista
+│        □ Diálogo atractivo (2 pts) - El diálogo impulsa la trama; contiene subtexto
+│        □ Gancho final (2 pts) - Genera suspenso para el siguiente capítulo
+│        □ Densidad de información (2 pts) - Información nueva cada 100 palabras
+│        □ Imágenes visuales/sensoriales (2 pts) - Descripciones que involucran los cinco sentidos
+│        □ Emoción auténtica (2 pts) - Emociones con profundidad o matices
+│        □ Sin "toque de IA" (2 pts) - Natural y fluido; sin rastros de escritura por IA
+│
+│        Criterios de puntuación:
+│        - 80-100% (16-20 pts): Excelente 🌟
+│        - 60-79% (12-15 pts): Bueno ✅ (Aprobado)
+│        - 40-59% (8-11 pts): Aprobado ⚠️ (Se recomienda revisión)
+│        - <40% (<8 pts): No aprobado ❌ (Requiere reescritura)
+│
+│   Actualización: status.md = "Volumen {X} Capítulo {Y} - Completado, pendiente de revisión"
+│   Punto de control: Crear chapter_{X}_{Y}_complete.checkpoint
+│   ⚠️ Ejecutar 6.3 inmediatamente al finalizar; no se puede omitir
+│
+├─ 6.3: character_check (Verificación de personajes) ⚠️ Obligatorio tras cada capítulo
+│   【Activador】Ejecución automática inmediatamente después del paso 6.2; no se puede omitir
+│   【Acción】Verificar los personajes que aparecen en este capítulo; crear fichas para los nuevos personajes
+│   【Proceso】
+│     1. 【Extraer personajes】Analizar el contenido del capítulo; extraer la lista de todos los personajes que aparecen
+│     2. 【Contrastar con fichas de personajes】Leer memory/character_cards.md; marcar personajes sin ficha
+│     3. 【Evaluar importancia】Para personajes sin ficha:
+│        - Leer config/volume_outline.md (Esquema del volumen)
+│        - Leer config/volume_{X}_chapter_outline.md (Esquema detallado de este volumen)
+│        - Buscar el nombre del personaje para determinar si aparece en capítulos posteriores
+│        - Si aparece ≥2 veces → Personaje importante; se debe crear una ficha de personaje
+│        - Si aparece solo una vez → Personaje menor o funcional; la creación es opcional
+│     4. [Crear ficha de personaje] Crear una ficha para los personajes importantes, incluyendo:
+│        - id: ID basado en Pinyin
+│        - name: Nombre completo
+│        - roles: Lista de identidades/roles
+│        - significance: Papel en la historia
+│        - key_events: Eventos clave (opcional)
+│     5. [Actualizar mapa de relaciones] Actualizar relationship_map.md si hay nuevas relaciones entre personajes
+│   [Salida] Actualizar memory/character_cards.md (si es necesario)
+│   [Verificación] Confirmar que todos los personajes importantes tienen ficha
+│   [Al finalizar] Proceder al paso 6.4 para esperar la revisión del usuario
+│
+├─ 6.4: user_review (Revisión del usuario)
+│   Satisfecho → Proceder al siguiente capítulo
+│   Requiere revisiones → Volver al paso 6.1 o 6.2
+│   Evolución: Registrar en lessons_learned.md (comentarios del usuario, áreas de mejora)
+│
+└─ 6.5: volume_complete (Verificación de finalización del volumen)
+Volumen incompleto → Volver al paso 6.1 para discutir el siguiente capítulo
+Volumen terminado → Confirmación del usuario, crear punto de control del volumen, proceder al siguiente volumen (Paso 5)
 ```
 
-### Step 7: final_assemble（最终合稿）
+### Paso 7: final_assemble (Compilación final)
 ```
-动作：合并所有章节
-产出：
-  - deliverables/final.md
-  - deliverables/final.docx（可选）
+Acción: Fusionar todos los capítulos
+Salida:
+- deliverables/final.md
+- deliverables/final.docx (opcional)
 
-验证：
-  scripts/validate_step.py --step 6 --book-name "{书名}"
+Verificación:
+scripts/validate_step.py --step 6 --book-name "{Título del libro}"
 
-检查项：
-  □ final.md 存在
-  □ 包含所有章节
-  □ 总字数符合预期
+Lista de comprobación:
+□ Existe final.md
+□ Incluye todos los capítulos
+□ El recuento total de palabras cumple con las expectativas
 ```
 
 ---
 
-## 验证脚本使用
+## Uso del script de verificación
 
-**每次步骤转换前必须运行**：
+**Debe ejecutarse antes de cada transición de paso**:
 
 ```bash
-# 验证 Step 2（项目初始化）
-python3 scripts/validate_step.py --step 2 --book-name "他养大了皇帝"
+# Verificar el paso 2 (Inicialización del proyecto)
+python3 scripts/validate_step.py --step 2 --book-name "He Raised the Emperor"
 
-# 验证 Step 3（世界构建）
-python3 scripts/validate_step.py --step 3 --book-name "他养大了皇帝"
+# Verificar el paso
+3 (Construcción del mundo)
+python3 scripts/validate_step.py --step 3 --book-name "He Raised the Emperor"
 
-# 验证 Step 5（章节写作）
-python3 scripts/validate_step.py --step 5 --chapter 1_01 --book-name "他养大了皇帝"
+# Validar el paso 5 (Escritura del capítulo)
+python3 scripts/validate_step.py --step 5 --chapter 1_01 --book-name
+``` "Crié al Emperador"
 ```
 
-**返回值**：
-- 0 = 验证通过
-- 1 = 验证失败（会输出具体错误）
+**Valores de retorno**:
+- 0 = Validación superada
+- 1 = Validación fallida (se mostrarán errores específicos)
 
 ---
 
-## 检查点机制
+## Mecanismo de puntos de control (Checkpoint)
 
-**创建检查点**：
+**Crear punto de control**:
 ```bash
-python3 scripts/checkpoint.py create --book-name "{书名}" --name "step_3_complete"
+python3 scripts/checkpoint.py create --book-name "{Nombre del libro}" --name "step_3_complete"
 ```
 
-**回滚到检查点**：
+**Revertir al punto de control**:
 ```bash
-python3 scripts/checkpoint.py rollback --book-name "{书名}" --name "step_3_complete"
+python3 scripts/checkpoint.py rollback --book-name "{Nombre del libro}" --name "step_3_complete"
 ```
 
-**检查点存储位置**：
+**Ubicación de almacenamiento de puntos de control**:
 ```
-~/Documents/{书名}/memory/checkpoints/
+~/Documents/{Nombre del libro}/memory/checkpoints/
 ├── step_2_complete.checkpoint
 ├── step_3_complete.checkpoint
 ├── step_4_complete.checkpoint
@@ -588,102 +580,100 @@ python3 scripts/checkpoint.py rollback --book-name "{书名}" --name "step_3_com
 
 ---
 
-## 进化机制
+## Mecanismo de evolución
 
-**每章完成后**，写入 `memory/lessons_learned.md`：
+**Tras completar cada capítulo**, escribe en `memory/lessons_learned.md`:
 ```markdown
-## 章节：第1卷第1章
+## Capítulo: Volumen 1, Capítulo 1
 
-### 用户修改意见
-- 开头节奏太慢
-- 主角出场不够强势
+### Comentarios del usuario/Revisiones
+- El ritmo al principio era demasiado lento
+- La entrada del protagonista carecía de impacto
 
-### 改进方向
-- 下章开头3段内必须有冲突
-- 人物对话要更有张力
+### Áreas de mejora
+- Introducir conflicto en los primeros 3 párrafos del siguiente capítulo
+- Aumentar la tensión en los diálogos de los personajes
 
-### 本次经验
-- 伏笔埋设成功：神秘老人身份
-- 字数控制良好：3200字
+### Conclusiones clave
+- Presagio (foreshadowing) exitoso: Identidad del misterioso anciano
+- Recuento de palabras bien gestionado: 3.200 palabras
 ```
 
-**每卷完成后**，生成 `memory/volume_{X}_retrospective.md`：
+**Tras completar cada volumen**, genera `memory/volume_{X}_retrospective.md`:
 ```markdown
-## 第1卷复盘
+## Retrospectiva del Volumen 1
 
-### 主题执行情况
-- 核心冲突是否推进
-- 情感弧线是否完成
+### Ejecución de la temática
+- Progresión del conflicto central
+- Cierre del arco emocional
 
-### 角色发展
-- 主角成长轨迹
-- 配角作用评估
+### Desarrollo de personajes
+- Trayectoria de crecimiento del protagonista
+- Evaluación de personajes secundarios
 
-### 伏笔追踪
-- 已埋设：5处
-- 已回收：2处
-- 待回收：3处（第2卷处理）
+### Seguimiento de presagios (foreshadowing)
+- Plantados: 5 casos
+- Resueltos: 2 casos
+- Pendientes de resolución: 3 elementos (a tratar en el Volumen 2)
 
-### 改进计划
-- 第2卷节奏加快
-- 增加反派戏份
+### Plan de mejora
+- Acelerar el ritmo en el Volumen 2
+- Aumentar el tiempo en escena del/los antagonista(s)
 ```
 
 ---
 
-## 错误处理
+## Gestión de errores
 
-### 验证失败
-1. 停止当前流程
-2. 输出具体错误信息
-3. 等待用户指令（修复/回滚/跳过需用户明确授权）
+### Fallo de validación
+1. Detener el proceso actual
+2. Mostrar detalles específicos del error
+3. Esperar instrucciones del usuario (las correcciones, reversiones u omisiones requieren una acción explícita del usuario) autorización)
 
-### 子Skill执行失败
-1. 重试3次
-2. 仍失败 → 人工干预
-3. 可选择回滚到上一个检查点
+### Fallo en la ejecución de una sub-tarea
+1. Reintentar 3 veces
+2. Si el fallo persiste → Intervención manual
+3. Opción de revertir al punto de control anterior
 
-### 用户不满意
-1. 记录修改意见到 lessons_learned.md
-2. 无限循环修改直到满意
-3. 每次修改后重新验证
+### Insatisfacción del usuario
+1. Registrar comentarios/notas de revisión en `lessons_learned.md`
+2. Iterar las revisiones hasta lograr la satisfacción
+3. Revalidar tras cada revisión
 
 ---
 
-## 状态文件格式（status.md）
+## Formato del archivo de estado (`status.md`)
 
 ```markdown
-# {书名} - 创作状态
+# {Título del libro} - Estado de la escritura
 
-**当前阶段**: Step 5 - chapter_loop
-**当前任务**: 第1卷第3章 - 章纲已确认，等待写作
-**最后更新**: 2026-03-04 12:30
+**Etapa actual**: Paso 5 - chapter_loop
+**Tarea actual**: Volumen 1, Capítulo 3 - Esquema del capítulo confirmado; pendiente de redacción
+**Última actualización**: 2026-03-04 12:30
 
-## 进度统计
-- 已完成章节：2章
-- 当前字数：6,500字
-- 目标字数：300,000字
+## Estadísticas de progreso
+- Capítulos completados: 2
+- Recuento actual de palabras: 6.500 palabras
+- Recuento objetivo de palabras: 300.000 palabras
 
-## 检查点记录
+## Registro de puntos de control
 - 2026-03-04 10:00: step_3_complete.checkpoint
 - 2026-03-04 11:00: step_4_complete.checkpoint
 - 2026-03-04 12:00: chapter_1_02_complete.checkpoint
 
-## 用户确认记录
-- 2026-03-04 11:00: 卷纲已确认
-- 2026-03-04 12:00: 第1卷第1章章纲已确认
+## Registro de confirmación del usuario
+- 2026-03-04 11:00: Esquema del volumen confirmado
+- 2026-03-04 12:00: Esquema del Volumen 1, Capítulo 1 confirmado
 ```
 
 ---
 
-## 使用方式
+## Uso
 
-用户说"我想写小说"即可激活。
-
-**首次创作**：从 Step 0 开始
-**继续创作**：读取 status.md，从记录的状态继续
-**恢复创作**：可选择回滚到某个检查点
+Activar diciendo "Quiero escribir una novela". **Empezar desde cero**: Comenzar en el Paso 0
+**Continuar escribiendo**: Leer `status.md` y reanudar desde el estado registrado
+**Reanudar la escritura**: Opción de revertir a un punto de control específico
 
 ---
 
-**记住**：不验证就不算完成，不检查就不算正确。
+**Recuerda**: No está terminado sin verificación, y no es correcto sin revisión.
