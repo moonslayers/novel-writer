@@ -1,11 +1,11 @@
-# novel-chapter-update
+# actualización-de-capítulo-de-novela
 
-**版本**: 2.0  
-**功能**: Step 4.7 - 记忆更新
+**Versión**: 2.0
+**Función**: Paso 4.7 - Actualización de memoria
 
 ---
 
-## 输入
+## Entrada
 
 ```yaml
 chapter_number: number
@@ -16,30 +16,30 @@ project_path: string
 
 ---
 
-## 输出
+## Salida
 
 ```yaml
 status: "success"
 updated_files:
-  - chapters/chapter-{N}.md
-  - memory/protagonist.md
-  - memory/characters/{name}.md
-  - memory/plot-hooks.md
-  - memory/cognitive-log.md
-  - memory/chapter-summaries.md
-  - config/status.md
+- chapters/chapter-{N}.md
+- memory/protagonist.md
+- memory/characters/{name}.md
+- memory/plot-hooks.md
+- memory/cognitive-log.md
+- memory/chapter-summaries.md
+- config/status.md
 ```
 
 ---
 
-## 更新顺序
+## Secuencia de actualización
 
-1. 保存章节正文
-2. 更新主角档案
-3. 更新/创建配角档案
-4. 更新伏笔追踪表
-5. 追加认知日志
-6. 添加章节摘要
-7. 更新项目状态
+1. Guardar el texto del cuerpo del capítulo
+2. Actualizar el perfil del protagonista
+3. Actualizar/crear perfiles de personajes secundarios
+4. Actualizar el registro de ganchos argumentales
+5. Añadir al registro cognitivo
+6. Añadir el resumen del capítulo
+7. Actualizar el estado del proyecto
 
-所有更新原子化，失败可回滚。
+Todas las actualizaciones son atómicas; es posible revertir los cambios en caso de fallo.
