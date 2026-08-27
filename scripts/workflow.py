@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-novel-writer 工作流控制脚本 - 确保每个环节都有验证
-使用：python3 workflow.py <命令> [参数]
+Script de control de flujo de trabajo de novel-writer - Asegura que cada etapa tenga validación.
+Uso: python3 workflow.py <comando> [argumentos]
 """
 
 import argparse
@@ -10,12 +10,12 @@ import subprocess
 from pathlib import Path
 
 def run_validation(script_name, *args):
-    """运行验证脚本"""
+    """Ejecuta un script de validación"""
     script_dir = Path(__file__).parent
     script_path = script_dir / script_name
     
     if not script_path.exists():
-        print(f"❌ 错误：验证脚本不存在 {script_name}")
+        print(f"❌ Error: El script de validación no existe {script_name}")
         return False
     
     cmd = ['python3', str(script_path)] + list(args)
@@ -23,85 +23,85 @@ def run_validation(script_name, *args):
     return result.returncode == 0
 
 def cmd_create_outline(args):
-    """创建章纲后的验证流程"""
-    print("\n📋 Step 6.1: 创建章纲\n")
+    """Flujo de validación después de crear el esquema del capítulo"""
+    print("\n📋 Paso 6.1: Crear esquema del capítulo\n")
     
-    # 验证章纲格式
+    # Validar formato del esquema
     if not run_validation('validate_chapter_outline.py', args.book_name, args.chapter):
-        print("\n❌ 章纲格式验证失败")
+        print("\n❌ Validación del formato del esquema falló")
         return False
     
-    print("\n✅ 章纲创建完成")
-    print(f"\n下一步：")
-    print(f"1. 请审阅章纲：memory/chapter_{args.chapter}_outline.md")
-    print(f"2. 确认后，更新 status.md 为'第X卷第Y章 - 章纲已确认'")
-    print(f"3. 运行：python3 workflow.py confirm-outline {args.book_name} {args.chapter}")
+    print("\n✅ Esquema del capítulo creado exitosamente")
+    print(f"\nSiguiente paso:")
+    print(f"1. Por favor, revisa el esquema: memory/chapter_{args.chapter}_outline.md")
+    print(f"2. Después de confirmar, actualiza status.md con 'Volumen X, Capítulo Y - Esquema confirmado'")
+    print(f"3. Ejecuta: python3 workflow.py confirm-outline {args.book_name} {args.chapter}")
     return True
 
 def cmd_confirm_outline(args):
-    """确认章纲后的验证流程"""
-    print("\n✅ Step 6.1 完成: 章纲已确认\n")
+    """Flujo de validación después de confirmar el esquema"""
+    print("\n✅ Paso 6.1 completado: Esquema confirmado\n")
     
-    # 验证章纲确认状态
+    # Validar estado de confirmación del esquema
     if not run_validation('validate_outline_confirmation.py', args.book_name, args.chapter):
-        print("\n❌ 章纲未确认，无法进入写作阶段")
+        print("\n❌ El esquema no está confirmado, no se puede entrar a la fase de escritura")
         return False
     
-    print("\n✅ 章纲确认验证通过")
-    print(f"\n下一步：")
-    print(f"运行：python3 workflow.py write {args.book_name} {args.chapter}")
+    print("\n✅ Validación de confirmación del esquema exitosa")
+    print(f"\nSiguiente paso:")
+    print(f"Ejecuta: python3 workflow.py write {args.book_name} {args.chapter}")
     return True
 
 def cmd_write(args):
-    """写作前的验证流程"""
-    print("\n✍️  Step 6.2: 章节写作\n")
+    """Flujo de validación antes de escribir"""
+    print("\n✍️  Paso 6.2: Escritura del capítulo\n")
     
-    # 必须验证章纲已确认
+    # Debe validar que el esquema esté confirmado
     if not run_validation('validate_outline_confirmation.py', args.book_name, args.chapter):
-        print("\n❌ 阻断：章纲未确认，不能开始写作")
-        print("请先完成：")
-        print(f"1. 创建章纲：python3 workflow.py create-outline {args.book_name} {args.chapter}")
-        print(f"2. 用户确认后：python3 workflow.py confirm-outline {args.book_name} {args.chapter}")
+        print("\n❌ Bloqueado: El esquema no está confirmado, no se puede empezar a escribir")
+        print("Por favor, completa primero:")
+        print(f"1. Crear esquema: python3 workflow.py create-outline {args.book_name} {args.chapter}")
+        print(f"2. Después de confirmación del usuario: python3 workflow.py confirm-outline {args.book_name} {args.chapter}")
         return False
     
-    print("\n✅ 写作前验证通过，可以开始写作")
+    print("\n✅ Validación previa a escritura exitosa, se puede comenzar a escribir")
     return True
 
 def cmd_after_write(args):
-    """写作完成后的验证流程"""
-    print("\n📝 Step 6.2 完成: 章节写作\n")
+    """Flujo de validación después de completar la escritura"""
+    print("\n📝 Paso 6.2 completado: Escritura del capítulo\n")
     
-    # 验证章节
+    # Validar capítulo
     if not run_validation('validate_step.py', '--step', '6', '--book-name', args.book_name, '--chapter', args.chapter):
-        print("\n⚠️  章节验证有警告，建议检查")
+        print("\n⚠️  La validación del capítulo tiene advertencias, se recomienda revisar")
     
-    print("\n下一步：")
-    print(f"运行：python3 workflow.py character-check {args.book_name} {args.chapter}")
+    print("\nSiguiente paso:")
+    print(f"Ejecuta: python3 workflow.py character-check {args.book_name} {args.chapter}")
     return True
 
 def cmd_character_check(args):
-    """角色检查流程"""
-    print("\n🎭 Step 6.3: 角色检查\n")
+    """Flujo de verificación de personajes"""
+    print("\n🎭 Paso 6.3: Verificación de personajes\n")
     
     if not run_validation('character_check.py', args.book_name, args.chapter):
-        print("\n⚠️  角色检查未完成")
+        print("\n⚠️  La verificación de personajes no se completó")
         return False
     
-    print("\n✅ 角色检查完成")
-    print("\n下一步：")
-    print("等待用户审阅章节")
-    print("满意 → 进入下一章")
-    print("修改 → 重新写作")
+    print("\n✅ Verificación de personajes completada")
+    print("\nSiguiente paso:")
+    print("Esperar revisión del capítulo por parte del usuario")
+    print("Si está satisfecho → Pasar al siguiente capítulo")
+    print("Si necesita modificaciones → Reescribir")
     return True
 
 def main():
-    parser = argparse.ArgumentParser(description='novel-writer 工作流控制')
+    parser = argparse.ArgumentParser(description='Control de flujo de trabajo de novel-writer')
     parser.add_argument('command', choices=[
         'create-outline', 'confirm-outline', 'write', 
         'after-write', 'character-check'
-    ], help='工作流命令')
-    parser.add_argument('book_name', help='书名')
-    parser.add_argument('chapter', help='章节号 (如 1_09)')
+    ], help='Comando del flujo de trabajo')
+    parser.add_argument('book_name', help='Nombre del libro')
+    parser.add_argument('chapter', help='Número de capítulo (ej. 1_09)')
     
     args = parser.parse_args()
     
