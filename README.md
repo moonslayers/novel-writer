@@ -2,7 +2,7 @@
 
 Este es un proyecto de tipo "Skills" diseñado para automatizar **todo el flujo de trabajo de escritura de una novela completa: desde el concepto inicial hasta el manuscrito final**. Simplemente describes la historia que quieres escribir utilizando lenguaje natural y la IA se encarga de todo el proceso: **conceptualización, construcción del mundo, diseño de personajes, esquematización de capítulos, redacción capítulo a capítulo y compilación del manuscrito final**.
 
-Compatible con los principales editores de IA: Antigravity, Trae, Claude Code, Open Code y Cursor. ![ai_novel](assets/ai_novel.png)
+Compatible con los principales editores de IA: Antigravity, Trae, Claude Code, Open Code y Cursor. ![ai_novel](assets/ai_novel.jpg)
 
 ***
 
