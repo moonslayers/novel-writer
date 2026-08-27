@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-novel-writer 检查点脚本 - 创建和回滚检查点
-使用：
-  python3 checkpoint.py create --book-name "书名" --name "checkpoint_name"
-  python3 checkpoint.py rollback --book-name "书名" --name "checkpoint_name"
-  python3 checkpoint.py list --book-name "书名"
+Script de puntos de control (checkpoints) de novel-writer - Crear y revertir puntos de control.
+Uso:
+  python3 checkpoint.py create --book-name "NombreDelLibro" --name "nombre_del_checkpoint"
+  python3 checkpoint.py rollback --book-name "NombreDelLibro" --name "nombre_del_checkpoint"
+  python3 checkpoint.py list --book-name "NombreDelLibro"
+  python3 checkpoint.py delete --book-name "NombreDelLibro" --name "nombre_del_checkpoint"
 """
 
 import argparse
@@ -16,10 +17,11 @@ from pathlib import Path
 from datetime import datetime
 
 def get_project_path(book_name):
-    """获取项目路径"""
+    """Obtiene la ruta del proyecto"""
     paths = [
         Path.home() / ".openclaw" / "workspace" / "content-projects" / book_name,
         Path.home() / "Documents" / book_name,
+        Path.cwd() / book_name,  # Añadido: también busca en el directorio actual
     ]
     for path in paths:
         if path.exists():
@@ -27,23 +29,23 @@ def get_project_path(book_name):
     return None
 
 def get_checkpoint_dir(project_path):
-    """获取检查点目录"""
+    """Obtiene el directorio de puntos de control"""
     checkpoint_dir = project_path / "memory" / "checkpoints"
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     return checkpoint_dir
 
 def create_checkpoint(args):
-    """创建检查点"""
+    """Crea un punto de control"""
     project_path = get_project_path(args.book_name)
     if not project_path:
-        print(f"❌ 错误：找不到项目目录 '{args.book_name}'")
+        print(f"❌ Error: No se encontró el directorio del proyecto '{args.book_name}'")
         return False
     
     checkpoint_dir = get_checkpoint_dir(project_path)
     checkpoint_name = args.name
     checkpoint_file = checkpoint_dir / f"{checkpoint_name}.checkpoint"
     
-    # 收集项目状态
+    # Recopilar estado del proyecto
     checkpoint_data = {
         "name": checkpoint_name,
         "created_at": datetime.now().isoformat(),
@@ -51,7 +53,7 @@ def create_checkpoint(args):
         "files": {}
     }
     
-    # 要备份的关键文件
+    # Archivos clave a respaldar
     key_files = [
         "status.md",
         "config/project_info.md",
@@ -60,39 +62,39 @@ def create_checkpoint(args):
         "config/volume_outline.md",
     ]
     
-    # 动态查找章节文件
+    # Búsqueda dinámica de archivos de capítulos
     chapters_dir = project_path / "chapters"
     if chapters_dir.exists():
         for chapter_file in sorted(chapters_dir.glob("vol*_chapter_*.md")):
             relative_path = chapter_file.relative_to(project_path)
             key_files.append(str(relative_path))
     
-    # 读取并存储文件内容
+    # Leer y almacenar contenido de archivos
     for file_path in key_files:
         full_path = project_path / file_path
         if full_path.exists():
             try:
                 content = full_path.read_text(encoding='utf-8')
                 checkpoint_data["files"][file_path] = content
-                print(f"✓ 已备份：{file_path}")
+                print(f"✓ Respaldado: {file_path}")
             except Exception as e:
-                print(f"⚠ 跳过 {file_path}: {e}")
+                print(f"⚠ Omitido {file_path}: {e}")
     
-    # 保存检查点
+    # Guardar punto de control
     checkpoint_file.write_text(json.dumps(checkpoint_data, ensure_ascii=False, indent=2), encoding='utf-8')
     
-    print(f"\n✅ 检查点已创建：{checkpoint_name}")
-    print(f"   位置：{checkpoint_file}")
-    print(f"   时间：{checkpoint_data['created_at']}")
-    print(f"   文件数：{len(checkpoint_data['files'])}")
+    print(f"\n✅ Punto de control creado: {checkpoint_name}")
+    print(f"   Ubicación: {checkpoint_file}")
+    print(f"   Fecha/Hora: {checkpoint_data['created_at']}")
+    print(f"   Número de archivos: {len(checkpoint_data['files'])}")
     
     return True
 
 def rollback_checkpoint(args):
-    """回滚到检查点"""
+    """Revierte a un punto de control"""
     project_path = get_project_path(args.book_name)
     if not project_path:
-        print(f"❌ 错误：找不到项目目录 '{args.book_name}'")
+        print(f"❌ Error: No se encontró el directorio del proyecto '{args.book_name}'")
         return False
     
     checkpoint_dir = get_checkpoint_dir(project_path)
@@ -100,48 +102,48 @@ def rollback_checkpoint(args):
     checkpoint_file = checkpoint_dir / f"{checkpoint_name}.checkpoint"
     
     if not checkpoint_file.exists():
-        print(f"❌ 错误：检查点 '{checkpoint_name}' 不存在")
-        print(f"   可用检查点：")
+        print(f"❌ Error: El punto de control '{checkpoint_name}' no existe")
+        print(f"   Puntos de control disponibles:")
         list_checkpoints(args)
         return False
     
-    # 读取检查点数据
+    # Leer datos del punto de control
     checkpoint_data = json.loads(checkpoint_file.read_text(encoding='utf-8'))
     
-    print(f"\n⚠️  即将回滚到检查点：{checkpoint_name}")
-    print(f"   创建时间：{checkpoint_data['created_at']}")
-    print(f"   这将覆盖当前项目的以下文件：")
+    print(f"\n⚠️  A punto de revertir al punto de control: {checkpoint_name}")
+    print(f"   Fecha de creación: {checkpoint_data['created_at']}")
+    print(f"   Esto sobrescribirá los siguientes archivos del proyecto actual:")
     
     for file_path in checkpoint_data["files"].keys():
         print(f"     - {file_path}")
     
     if not args.force:
-        print(f"\n确认回滚？输入 'yes' 继续：")
+        print(f"\n¿Confirmar reversión? Escribe 'yes' para continuar:")
         confirmation = input().strip().lower()
         if confirmation != 'yes':
-            print("已取消回滚")
+            print("Reversión cancelada")
             return False
     
-    # 执行回滚
+    # Ejecutar reversión
     restored_count = 0
     for file_path, content in checkpoint_data["files"].items():
         full_path = project_path / file_path
         try:
             full_path.parent.mkdir(parents=True, exist_ok=True)
             full_path.write_text(content, encoding='utf-8')
-            print(f"✓ 已恢复：{file_path}")
+            print(f"✓ Restaurado: {file_path}")
             restored_count += 1
         except Exception as e:
-            print(f"❌ 恢复失败 {file_path}: {e}")
+            print(f"❌ Fallo al restaurar {file_path}: {e}")
     
-    print(f"\n✅ 回滚完成，恢复了 {restored_count} 个文件")
+    print(f"\n✅ Reversión completada, se restauraron {restored_count} archivos")
     return True
 
 def list_checkpoints(args):
-    """列出所有检查点"""
+    """Lista todos los puntos de control"""
     project_path = get_project_path(args.book_name)
     if not project_path:
-        print(f"❌ 错误：找不到项目目录 '{args.book_name}'")
+        print(f"❌ Error: No se encontró el directorio del proyecto '{args.book_name}'")
         return False
     
     checkpoint_dir = get_checkpoint_dir(project_path)
@@ -149,11 +151,11 @@ def list_checkpoints(args):
     checkpoints = sorted(checkpoint_dir.glob("*.checkpoint"))
     
     if not checkpoints:
-        print(f"📭 没有找到检查点")
+        print(f"📭 No se encontraron puntos de control")
         return True
     
-    print(f"\n📋 检查点列表 ({len(checkpoints)} 个)：\n")
-    print(f"{'名称':<40} {'创建时间':<25} {'文件数':<10}")
+    print(f"\n📋 Lista de puntos de control ({len(checkpoints)}):\n")
+    print(f"{'Nombre':<40} {'Fecha de creación':<25} {'Archivos':<10}")
     print("-" * 75)
     
     for cp_file in checkpoints:
@@ -164,40 +166,40 @@ def list_checkpoints(args):
             file_count = len(data.get('files', {}))
             print(f"{name:<40} {created:<25} {file_count:<10}")
         except Exception as e:
-            print(f"{cp_file.stem:<40} {'读取失败':<25} {'?':<10}")
+            print(f"{cp_file.stem:<40} {'Error de lectura':<25} {'?':<10}")
     
     return True
 
 def delete_checkpoint(args):
-    """删除检查点"""
+    """Elimina un punto de control"""
     project_path = get_project_path(args.book_name)
     if not project_path:
-        print(f"❌ 错误：找不到项目目录 '{args.book_name}'")
+        print(f"❌ Error: No se encontró el directorio del proyecto '{args.book_name}'")
         return False
     
     checkpoint_dir = get_checkpoint_dir(project_path)
     checkpoint_file = checkpoint_dir / f"{args.name}.checkpoint"
     
     if not checkpoint_file.exists():
-        print(f"❌ 错误：检查点 '{args.name}' 不存在")
+        print(f"❌ Error: El punto de control '{args.name}' no existe")
         return False
     
     checkpoint_file.unlink()
-    print(f"✅ 已删除检查点：{args.name}")
+    print(f"✅ Punto de control eliminado: {args.name}")
     return True
 
 def main():
-    parser = argparse.ArgumentParser(description='novel-writer 检查点管理脚本')
+    parser = argparse.ArgumentParser(description='Script de gestión de puntos de control de novel-writer')
     parser.add_argument('action', choices=['create', 'rollback', 'list', 'delete'], 
-                        help='操作类型')
-    parser.add_argument('--book-name', type=str, required=True, help='书名')
-    parser.add_argument('--name', type=str, help='检查点名称')
-    parser.add_argument('--force', action='store_true', help='强制回滚，不询问确认')
+                        help='Tipo de acción')
+    parser.add_argument('--book-name', type=str, required=True, help='Nombre del libro')
+    parser.add_argument('--name', type=str, help='Nombre del punto de control')
+    parser.add_argument('--force', action='store_true', help='Forzar reversión sin pedir confirmación')
     
     args = parser.parse_args()
     
     if args.action in ['create', 'rollback', 'delete'] and not args.name:
-        parser.error(f"'{args.action}' 操作需要 --name 参数")
+        parser.error(f"La acción '{args.action}' requiere el parámetro --name")
     
     actions = {
         'create': create_checkpoint,
