@@ -1,70 +1,70 @@
-# novel-chapter-write
+# Escritura de capítulos de novela
 
-**版本**: 2.0  
-**功能**: Step 4.4 - 正文生成
+**Versión**: 2.0
+**Función**: Paso 4.4 - Generación del texto principal
 
 ---
 
-## 输入
+## Entrada
 
 ```yaml
 framework: object
 characters: object
 memory: object
-user_feedback: object        # 修改意见（如有）
+user_feedback: object        # Sugerencias de revisión (si las hay)
 ```
 
 ---
 
-## 输出
+## Salida
 
 ```yaml
 status: "success"
-content: string              # 完整章节正文
+content: string              # Texto completo del capítulo
 word_count: number
 change_summary:
-  plot_progress: {...}
-  character_changes: {...}
-  new_characters: [...]
-  world_changes: [...]
-  next_chapter_hints: [...]
+plot_progress: {...}
+character_changes: {...}
+new_characters: [...]
+world_changes: [...]
+next_chapter_hints: [...]
 ```
 
 ---
 
-## 写作约束
+## Restricciones de escritura
 
-### 开篇钩子（前100字）
-✓ 冲突/危机/秘密/反常
-✗ 禁止环境描写、背景介绍
+### Gancho inicial (primeras 100 palabras)
+✓ Conflicto/crisis/secreto/anomalía
+✗ Sin descripciones ambientales ni exposición de trasfondo
 
-### 节奏控制
-✓ 每300字小推进
-✓ 每800字情绪转折
-✓ 压抑≤1500字必须释放
+### Control del ritmo
+✓ Ligero avance de la trama cada 300 palabras
+✓ Cambio emocional cada 800 palabras
+✓ Liberación de tensión requerida tras ≤1500 palabras de acumulación
 
-### 爽点工程（60%-20%-20%）
-- 铺垫期：建立期待、制造障碍、压抑情绪
-- 爆发期：时机触发、反差呈现、瞬间碾压
-- 余韵期：配角反应（≥3种）、环境变化、新钩子
+### Ingeniería de "satisfacción" (60%-20%-20%)
+- Acumulación: Generar expectación, crear obstáculos, contener emociones
+- Clímax: Momento desencadenante, revelar contraste, dominio inmediato
+- Consecuencias: Reacciones de personajes secundarios (≥3 tipos), cambios en el entorno, nuevo gancho
 
-### 语言风格
-✓ 多用行为，少用形容词
-✓ 少用比喻，直接呈现
-✓ 短句为主，动词优先
-✓ 展示而非讲述
+### Estilo de escritura
+✓ Centrarse en acciones; minimizar adjetivos
+✓ Minimizar metáforas; presentar directamente
+✓ Oraciones cortas; priorizar verbos
+✓ Mostrar, no contar
 
-### 脑洞约束（新增）
-✓ 避免经典套路直接复制
-✓ 金手指设计要有独特性
-✓ 每章至少一个"没想到"元素
+### Restricciones creativas (Nuevas)
+✓ Evitar copiar directamente tropos clásicos
+✓ Diseño único para el "Dedo de Oro" (habilidad ventajosa/truco)
+✓ Al menos un elemento "inesperado" por capítulo
 
-### 反套路检查（禁止）
-✗ "三十年河东"式台词
-✗ 戒指/玉佩里藏老爷爷
-✗ 当众测试资质被打脸
-✗ 未婚妻上门羞辱
+### Verificación contra tropos (Prohibidos)
+✗ Diálogos al estilo "Treinta años en la orilla este del río..."
+✗ Maestro antiguo/espíritu oculto en un anillo o colgante de jade
+✗ Prueba de aptitud pública seguida de humillación pública
+✗ Prometida que llega para lanzar insultos
 
-### 结尾强制
-✓ 新问题/危机/疑问
-✗ 禁止圆满收尾
+### Requisito de finalización
+✓ Nuevo problema/crisis/interrogante
+✗ Sin finales felices y cerrados
