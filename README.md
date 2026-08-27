@@ -1,55 +1,52 @@
-# novel-writer| AI 小说创作引擎 v3.0
+# novel-writer | Motor de creación de novelas con IA v3.0
 
-这是一个能实现**长篇小说从创意到完稿全流程自动化**的 Skill 项目。作者只需用自然语言告诉 AI 你想写什么故事，它就能帮你完成从**创意构思、世界观搭建、人物设定、章节大纲、逐章写作到最终合稿**的整套流程。
+Este es un proyecto de tipo "Skills" diseñado para automatizar **todo el flujo de trabajo de escritura de una novela completa: desde el concepto inicial hasta el manuscrito final**. Simplemente describes la historia que quieres escribir utilizando lenguaje natural y la IA se encarga de todo el proceso: **conceptualización, construcción del mundo, diseño de personajes, esquematización de capítulos, redacción capítulo a capítulo y compilación del manuscrito final**.
 
-支持主流 AI 编辑器：Antigravity / Trae / Claude Code / Cursor。
-
-![ai_novel](assets/ai_novel.png)
+Compatible con los principales editores de IA: Antigravity, Trae, Claude Code, Open Code y Cursor. ![ai_novel](assets/ai_novel.png)
 
 ***
 
-## 能做什么
+## Capacidades
 
-| 功能        | 说明                                |
-| --------- | --------------------------------- |
-| **创意构思**  | 与 AI 讨论书名、篇幅、视角、情感基调等核心要素         |
-| **世界观搭建** | 自动生成时代背景、核心场景、制度礼仪等设定文档           |
-| **人物设定**  | 创建结构化角色卡（YAML格式）、人物关系图谱           |
-| **卷纲设计**  | 设计三卷主题、核心冲突、情感弧线                  |
-| **章节大纲**  | 为每卷生成所有章节的情节概述，遵循四大推进原则           |
-| **逐章写作**  | 自动写作 2500-3500 字/章，确保画面感、代入感、冲突张力 |
-| **角色检查**  | 每章完成后自动检查新角色，为重要角色创建角色卡           |
-| **伏笔追踪**  | 自动记录已埋设伏笔，确保前后呼应                  |
-| **经验进化**  | 记录用户修改意见，持续改进写作质量                 |
-| **检查点机制** | 关键节点自动创建快照，支持随时回滚恢复               |
-| **最终合稿**  | 合并所有章节生成 final.md 和 final.docx    |
+| Funcionalidad | Descripción |
+| :--- | :--- |
+| **Ideación creativa** | Discute con la IA elementos clave como el título del libro, la extensión, la perspectiva y el tono emocional |
+| **Construcción del mundo** | Genera automáticamente documentos de ambientación para la época, ubicaciones clave, sistemas y normas sociales |
+| **Diseño de personajes** | Crea fichas de personajes estructuradas (formato YAML) y mapas de relaciones entre personajes |
+| **Esquema de volúmenes** | Diseña temas, conflictos centrales y arcos emocionales para tres volúmenes |
+| **Esquemas de capítulos** | Genera resúmenes de la trama para todos los capítulos de cada volumen, siguiendo cuatro principios clave de progresión |
+| **Redacción capítulo a capítulo** | Escribe automáticamente entre 2.500 y 3.500 palabras por capítulo, garantizando imágenes vívidas, inmersión y tensión conflictiva |
+| **Verificación de personajes** | Identifica automáticamente nuevos personajes tras cada capítulo y crea fichas para los personajes clave |
+| **Seguimiento de presagios** | Registra automáticamente los presagios introducidos para asegurar la coherencia narrativa |
+| **Evolución de la experiencia** | Registra los comentarios y revisiones del usuario para mejorar continuamente la calidad de la escritura |
+| **Mecanismo de puntos de control** | Crea automáticamente instantáneas en hitos clave; permite revertir cambios y recuperar el estado en cualquier momento |
+| **Compilación final** | Fusiona todos los capítulos para generar los archivos `final.md` y `final.docx` | ***
 
-***
+## Limitaciones
 
-## 做不到什么
-
-- **不是全自动写作机器** -- 关键节点（章纲、卷纲）必须得到用户确认后才能继续
-- **不能替代人工审校** -- 每章完成后需要用户审阅，根据反馈进行修改
-- **不能保证出版质量** -- 生成内容需要人工润色才能达到出版标准
-- **不支持多语言写作** -- 目前主要针对中文长篇小说优化
-- **不能实时联网查资料** -- 世界观设定依赖 AI 已有知识，特定领域需用户提供资料
+- **No es una máquina de escritura totalmente automatizada** — Los hitos clave (esquemas de capítulos o volúmenes) requieren la confirmación del usuario antes de continuar.
+- **No sustituye la revisión humana** — Se requiere la revisión y corrección por parte del usuario, basada en la retroalimentación, tras completar cada capítulo.
+- **Sin garantía de calidad de publicación** — El contenido generado requiere un pulido humano para cumplir con los estándares de publicación.
+- **Sin soporte multilingüe** — Actualmente optimizado principalmente para novelas extensas en chino.
+- **Sin búsqueda web en tiempo real** — La construcción del mundo narrativo se basa en el conocimiento previo de la IA; los usuarios deben proporcionar material para temas especializados.
 
 ***
 
-## 🚀 快速开始 (Quick Start)
+## 🚀 Inicio rápido
 
-### 1. 安装 Skill (Install)
+### 1. Instalar la Skill
 
 **🤖 Antigravity / Gemini Code Assist:**
 
 ```bash
 git clone https://github.com/AI-Practical-Lab/novel-writer.git .agent/skills/novel-writer
+
 ```
 
 **🚀 Trae IDE:**
 
 ```bash
-novel-writergit clone https://github.com/AI-Practical-Lab/novel-writer.git .trae/skills/novel-writer
+git clone https://github.com/AI-Practical-Lab/novel-writer.git .trae/skills/novel-writer
 ```
 
 **🧠 Claude Code:**
@@ -58,164 +55,162 @@ novel-writergit clone https://github.com/AI-Practical-Lab/novel-writer.git .trae
 git clone https://github.com/AI-Practical-Lab/novel-writer.git .claude/skills/novel-writer
 ```
 
-**💻 Cursor / VSCode / 通用:**
+**💻 Cursor / VSCode / General:**
 
 ```bash
 git clone https://github.com/AI-Practical-Lab/novel-writer.git skills/novel-writer
 ```
 
-### 2. 试试这样跟 AI 说
+### 2. Prueba a interactuar con la IA de esta manera
 
-**开始一本新小说**
+**Iniciar una nueva novela**
 
-> "我想写一本小说"
+> "Quiero escribir una novela."
 
-**指定类型创作**
+**Escribir en un género específico**
 
-> "帮我写一本古代言情长篇小说，要感人一点的"
+> "Ayúdame a escribir una novela romántica histórica extensa; hazla conmovedora."
 
-**继续之前的创作**
+**Continuar un trabajo anterior**
 
-> "继续写《他养大了皇帝》"
+> "Continúa escribiendo *He Raised the Emperor*."
 
-**查看当前进度**
+**Comprobar el progreso actual**
 
-> "小说写到哪了？"
+> "¿En qué punto de la novela estamos?"
 
-**回滚到检查点**
+**Volver a un punto de control**
 
-> "回滚到第3章完成时的状态"
+> "Vuelve al estado posterior a la finalización del Capítulo 3."
 
-**修改已写章节**
+**Revisar un capítulo escrito**
 
-> "第5章节奏太慢，帮我重写"
+> "El ritmo del Capítulo 5 es demasiado lento; ayúdame a reescribirlo."
 
 ***
 
-## 📦 环境准备
+## 📦 Configuración del entorno
 
-### 项目输出路径
+### Ruta de salida del proyecto
 
-**路径规则**：`~/Documents/{书名}/`
+**Regla de ruta**: `~/Documents/{Título del libro}/`
 
-- 目录名使用**纯中文字符**，与书名完全一致
-- 示例：《他养大了皇帝》→ `~/Documents/他养大了皇帝/`
+- El nombre del directorio debe utilizar **únicamente caracteres chinos** y coincidir exactamente con el título del libro.
+- Ejemplo: *He Raised the Emperor* → `~/Documents/他养大了皇帝/`
 
-**目录结构**：
+**Estructura de directorios**:
 
 ```
-~/Documents/{书名}/
+~/Documents/{Título del libro}/
 ├── config/
-│   ├── project_info.md        # 项目元信息
-│   ├── worldbuilding.md       # 世界观设定
-│   ├── characters.md          # 人物小传
-│   └── volume_outline.md      # 卷纲
+│   ├── project_info.md ​​​​       # Metadatos del proyecto
+│   ├── worldbuilding.md       # Configuración de la construcción del mundo
+│   ├── characters.md          # Perfiles de personajes
+│   └── volume_outline.md      # Esquema del volumen
 ├── memory/
-│   ├── character_cards.md     # 角色卡（YAML格式）
-│   ├── relationship_map.md    # 人物关系图谱
-│   ├── foreshadowing.md       # 伏笔追踪
-│   ├── lessons_learned.md     # 创作经验积累
-│   └── checkpoints/           # 检查点快照
+│   ├── character_cards.md     # Fichas de personajes (formato YAML)
+│   ├── relationship_map.md    # Mapa de relaciones entre personajes
+│   ├── foreshadowing.md       # Seguimiento de presagios (foreshadowing)
+│   ├── lessons_learned.md     # Lecciones de escritura acumuladas
+│   └── checkpoints/           # Instantáneas de puntos de control
 ├── chapters/
 │   ├── vol1_chapter_01.md
 │   ├── vol1_chapter_02.md
 │   └── ...
 ├── deliverables/
-│   ├── final.md               # 合并稿
-│   └── final.docx             # 导出文档
-└── status.md                  # 当前状态（唯一真相源）
+│   ├── final.md               # Borrador consolidado
+│   └── final.docx             # Documento exportado
+└── status.md                  # Estado actual (Fuente única de verdad)
 ```
 
 ***
 
-## 📂 文件夹说明
+## 📂 Descripción de las carpetas
 
-- `SKILL.md`: 给 AI 看的完整说明书，包含状态机和强制验证规则
-- `README.md`: 给用户看的本文档
-- `scripts/`: 验证脚本和检查点管理脚本
-  - `validate_step.py`: 强制验证脚本，每步必跑
-  - `checkpoint.py`: 检查点创建和回滚
-  - `workflow.py`: 工作流管理
-- `sub-skills/`: 子技能目录
-  - `novel-init/`: 项目初始化
-  - `novel-brainstorm/`: 创意构思
-  - `novel-setup/`: 项目设置
-  - `novel-memory-load/`: 记忆加载
-  - `novel-chapter-frame/`: 章节框架
-  - `novel-chapter-write/`: 章节写作
-  - `novel-chapter-character/`: 角色检查
-  - `novel-chapter-update/`: 章节更新
-  - `novel-check-quality/`: 质量检查
+- `SKILL.md`: Instrucciones detalladas para la IA, incluyendo la máquina de estados y las reglas de validación obligatorias.
+- `README.md`: Este documento (para el usuario).
+- `scripts/`: Scripts de validación y gestión de puntos de control.
+- `validate_step.py`: Script de validación obligatoria; debe ejecutarse en cada paso
+- `checkpoint.py`: Creación de puntos de control y reversión
+- `workflow.py`: Gestión del flujo de trabajo
+- `sub-skills/`: Directorio de subhabilidades
+- `novel-init/`: Inicialización del proyecto
+- `novel-brainstorm/`: Lluvia de ideas creativa
+- `novel-setup/`: Configuración del proyecto
+- `novel-memory-load/`: Carga de memoria
+- `novel-chapter-frame/`: Esquema/estructura del capítulo
+- `novel-chapter-write/`: Escritura del capítulo
+- `novel-chapter-character/`: Revisión de personajes
+- `novel-chapter-update/`: Actualización del capítulo
+- `novel-check-quality/`: Control de calidad
 
 ***
 
-## ⚠️ 核心机制说明
+## ⚠️ Explicación de los mecanismos fundamentales
 
-### 强制验证机制
+### Mecanismo de validación obligatoria
 
-每一步完成后必须运行验证脚本，失败则阻断流程：
+El script de validación debe ejecutarse tras completar cada paso; un fallo detiene el flujo de trabajo:
 
 ```bash
-# 验证 Step 2（项目初始化）
-python scripts/validate_step.py --step 2 --book-name "书名"
+# Validar paso 2 (Inicialización del proyecto)
+python scripts/validate_step.py --step 2 --book-name "BookTitle"
 
-# 验证 Step 3（世界构建）
-python scripts/validate_step.py --step 3 --book-name "书名"
+# Validar paso 3 (Construcción del mundo)
+python scripts/validate_step.py --step 3 --book-name "BookTitle"
 
-# 验证章节写作
-python scripts/validate_step.py --step 6 --chapter 1_01 --book-name "书名"
+# Validar redacción del capítulo
+python scripts/validate_step.py --step 6 --chapter 1_01 --book-name "BookTitle"
 ```
 
-### 检查点机制
+### Mecanismo de puntos de control (checkpoint)
 
-关键节点自动创建快照，支持随时回滚：
+Se crean instantáneas automáticamente en hitos clave, lo que permite revertir el estado en cualquier momento:
 
 ```bash
-# 创建检查点
-python scripts/checkpoint.py create --book-name "书名" --name "step_3_complete"
+# Crear punto de control
+python scripts/checkpoint.py create --book-name "Book Title" --name "step_3_complete"
 
-# 回滚到检查点
-python scripts/checkpoint.py rollback --book-name "书名" --name "step_3_complete"
+# Revertir a un punto de control
+python scripts/checkpoint.py rollback --book-name "Book Title" --name "step_3_complete"
 ```
 
-### 状态机流程
+### Flujo de trabajo de la máquina de estados
 
 ```
-Step 0: init → Step 1: brainstorm → Step 2: project_init 
-→ Step 3: world_building → Step 4: volume_outline 
-→ Step 5: volume_chapter_outline → Step 6: chapter_loop 
-→ Step 7: final_assemble
+Paso 0: init → Paso 1: brainstorm → Paso 2: project_init
+→ Paso 3: world_building → Paso 4: volume_outline
+→ Paso 5: volume_chapter_outline → Paso 6: chapter_loop
+→ Paso 7: final_assemble
 ```
 
-### 章节情节推进四大原则
+### Cuatro principios de la progresión de la trama del capítulo
 
-1. **因果链原则**：每章危机必须从上一章隐患发展而来
-2. **抉择+代价原则**：主角每章必须做出明确抉择，每个抉择都有代价
-3. **升级递进原则**：危机必须层层升级，禁止同一级别危机重复出现
-4. **节奏权重原则**：过渡/铺垫/高潮/结尾阶段用章节数量体现节奏
+1. **Principio de cadena de causalidad**: La crisis de cada capítulo debe surgir de un problema latente en el capítulo anterior.
+2. **Principio de elección y coste**: El protagonista debe tomar una decisión clara en cada capítulo, y toda elección conlleva un coste.
+3. **Principio de escalada**: Las crisis deben intensificarse progresivamente; está prohibido repetir una crisis del mismo nivel.
+4. **Principio de ritmo y ponderación**: El ritmo se refleja en el número de capítulos asignados a las fases de transición, preparación, clímax y conclusión.
 
 ***
 
-## ⚠️ 常见问题 (FAQ)
+## ⚠️ Preguntas frecuentes
 
-1. **如何查看当前写作进度？**
-   查看 `~/Documents/{书名}/status.md` 文件，这是唯一真相源。
-2. **如何修改已写的章节？**
-   告诉 AI "帮我修改第X章"，AI 会根据你的反馈重写并记录到 `lessons_learned.md`。
-3. **验证失败怎么办？**
-   验证脚本会输出具体错误，根据提示修复后重新运行验证。
-4. **可以跳过某个步骤吗？**
-   不可以。强制验证机制确保每一步都完成才能进入下一步。
-5. **如何恢复之前的创作？**
-   告诉 AI "继续写《书名》"，AI 会自动读取 status.md 从断点继续。
-6. **写了一半想回滚怎么办？**
-   告诉 AI "回滚到XXX检查点"，AI 会恢复到该检查点状态。
+1. **¿Cómo consulto el progreso actual de la escritura?**
+Revisa el archivo `~/Documents/{Book Title}/status.md`; esta es la fuente única de información.
+2. **¿Cómo modifico un capítulo que ya he escrito?**
+Indícale a la IA: "Ayúdame a revisar el capítulo X". La IA lo reescribirá basándose en tus comentarios y registrará los cambios en `lessons_learned.md`.
+3. **¿Qué pasa si falla la validación?**
+El script de validación mostrará errores específicos; corrige los problemas siguiendo las indicaciones y vuelve a ejecutar la validación.
+4. **¿Puedo saltarme un paso?**
+No. Un mecanismo de validación obligatorio garantiza que cada paso se complete antes de pasar al siguiente.
+5. **¿Cómo retomo el trabajo anterior?**
+Dile a la IA: "Continúa escribiendo '[Título del libro]'"; leerá automáticamente `status.md` y retomará la tarea desde el último punto de control.
+6. **¿Qué pasa si quiero revertir cambios a mitad del proceso?**
+Dile a la IA: "Vuelve al punto de control XXX", y regresará al estado de dicho punto. ***
 
-***
+## 🔄 Cómo actualizar
 
-## 🔄 如何更新 (Update)
-
-当有新功能发布时，您可以输入以下命令一键更新：
+Cuando se lancen nuevas funciones, podrás actualizar con un solo comando:
 
 ```bash
 cd .trae/skills/novel-writer
@@ -224,19 +219,19 @@ git pull
 
 ***
 
-## 🌟 核心特性 (V3.0)
+## 🌟 Características principales (V3.0)
 
-- **强制验证机制**：每一步必须通过验证脚本，确保流程完整性
-- **检查点机制**：关键节点自动创建快照，支持随时回滚恢复
-- **进化机制**：记录用户修改意见，持续改进写作质量
-- **角色追踪**：自动检查新角色，维护人物关系图谱
-- **伏笔管理**：自动记录已埋设伏笔，确保前后呼应
-- **上下文感知**：写作时自动读取前文、角色卡、伏笔等信息
-- **质量约束**：字数控制（2500-3500字/章）、画面感、代入感、冲突张力等八大写作原则
+- **Verificación obligatoria**: Cada paso debe superar un script de verificación para garantizar la integridad del proceso.
+- **Sistema de puntos de control**: Se crean instantáneas automáticamente en hitos clave, lo que facilita la reversión y recuperación.
+- **Mecanismo de evolución**: Se registran los comentarios y ediciones del usuario para mejorar continuamente la calidad de la escritura.
+- **Seguimiento de personajes**: Detecta automáticamente nuevos personajes y mantiene un mapa de relaciones entre ellos.
+- **Gestión de presagios**: Registra automáticamente las tramas sembradas para asegurar la coherencia narrativa.
+- **Conciencia del contexto**: Hace referencia automática al texto anterior, a los perfiles de personajes y a los detalles de los presagios mientras escribe.
+- **Restricciones de calidad**: Cumple con ocho principios clave de escritura, incluyendo el control de extensión (2.500–3.500 palabras por capítulo), imágenes visuales, inmersión y tensión narrativa.
 
 ***
 
-## 打赏支持
+## Apoya el proyecto
 
-如果这个项目对你有帮助，欢迎打赏支持。你的支持会直接转化为继续开发和维护的动力。
+Si este proyecto te resulta útil, considera apoyarlo. Tu apoyo impulsa directamente su desarrollo y mantenimiento continuos.
 ![good](assets/good.jpg)
