@@ -1,247 +1,273 @@
 # novel-brainstorm
 
-**版本**: 2.0  
-**功能**: Step 1 & 3 - 需求澄清与头脑风暴（交互式）
+**Versión**: 2.0
+**Función**: Pasos 1 y 3 – Clarificación de requisitos y lluvia de ideas (interactiva)
 
 ---
 
-## 核心设计原则
+## Principio de diseño fundamental
 
-**不直接面对用户**，所有交互通过主 Skill (orchestrator) 中转。
-
-```
-用户 ←→ 主Skill ←→ novel-brainstorm
-              ↑
-        负责展示问题和收集答案
+**Sin interacción directa con el usuario**; todas las interacciones se canalizan a través de la Skill principal (orquestador). ```
+Usuario ←→ Skill principal ←→ novel-brainstorm
+↑
+Responsable de presentar preguntas y recopilar respuestas
 ```
 
 ---
 
-## 输入接口
+## Interfaz de entrada
 
 ```yaml
-mode: "generate_question" | "process_answer" | "finalize"
+mode: "generate_question" | "process_answer" |
+``` "finalizar"
 
-# mode = generate_question
-context:
-  project_path: string
-  current_confirmed: object      # 已确认的大纲要素
-  pending_dimensions: array      # 待讨论的维度列表
-  last_answer: null              # 无用户回答
+# modo = generate_question
+contexto:
+project_path: string
+current_confirmed: object      # Elementos del esquema confirmados
+pending_dimensions: array      # Lista de dimensiones pendientes de discusión
+last_answer: null              # Sin respuesta del usuario
 
-# mode = process_answer  
-context:
-  project_path: string
-  current_confirmed: object
-  pending_dimensions: array
-  last_answer:                   # 用户的回答
-    question_id: string
-    answer_text: string
-    selected_option: string      # 如适用
+# modo = process_answer
+contexto:
+project_path: string
+current_confirmed: object
+pending_dimensions: array
+last_answer:                   # Respuesta del usuario
+question_id: string
+answer_text: string
+selected_option: string      # Si aplica
 
-# mode = finalize
-context:
-  project_path: string
-  current_confirmed: object      # 全部确认完成
+# modo = finalize
+contexto:
+project_path: string
+current_confirmed: object      # Todas las confirmaciones completadas
 ```
 
 ---
 
-## 输出接口
+## Interfaz de salida
 
 ```yaml
-# action = ask_user （需要继续交互）
+# acción = ask_user (requiere interacción adicional)
 status: "in_progress"
 action: "ask_user"
 question:
-  id: string                     # 问题唯一标识
-  dimension: string              # 所属维度
-  text: string                   # 问题文本
-  description: string            # 为什么问这个问题
-  options:                       # 选项（如适用）
-    - id: "A"
-      text: "选项A描述"
-    - id: "B" 
-      text: "选项B描述"
-    - id: "C"
-      text: "其他：___"
-  allow_free_input: boolean      # 是否允许自由输入
-  
-confirmed_update: object         # 本次新增/更新的确认内容
-next_dimension: string           # 建议下一个维度
-progress:                        # 进度
-  current: number
-  total: number
+id: string                     # Identificador único de la pregunta
+dimension: string              # Dimensión asociada
+text: string                   # Texto de la pregunta
+description: string            # Motivo de la pregunta
+options:                       # Opciones (si aplica)
+- id: "A"
+text: "Descripción de la opción A"
+- id: "B"
+text: "Descripción de la opción B"
+- id: "C"
+text: "Otro: ___"
+allow_free_input: boolean      # Si se permite entrada de texto libre
+
+confirmed_update: object         # Contenido confirmado recién añadido/actualizado
+next_dimension: string           # Siguiente dimensión sugerida
+progress:                        # Estado del progreso
+current: number
+total: number
 
 ---
 
-# action = continue （自动继续，无需用户输入）
+# acción = continue (continuación automática, no requiere entrada del usuario)
 status: "in_progress"
 action: "continue"
-message: string                  # 说明为什么要继续
+message: string                  # Explicación para continuar
 confirmed_update: object
 next_dimension: string
 
 ---
 
-# action = complete （全部完成）
+# acción = complete (todas las tareas finalizadas)
 status: "completed"
 action: "complete"
-confirmed_elements: object       # 完整的六维度大纲要素
+confirmed_elements: object       # Elementos completos del esquema de seis dimensiones
 file_updates:
-  - path: "memory/brainstorm-result.yaml"
-    content: "..."
+- path:
+``` "memory/brainstorm-result.yaml"
+content: "..."
 next_step: "proceed_to_setup" | "proceed_to_outline"
 ```
 
 ---
 
-## 六维度清单
+## Lista de verificación de seis dimensiones
 
-| 序号 | 维度 | 关键问题 |
+| N.º | Dimensión | Preguntas clave |
 |:---:|------|---------|
-| 1 | protagonist_arc | 主角起点、终点、关键转折 |
-| 2 | conflicts | 内在冲突、外在阻力 |
-| 3 | key_events | 核心事件、爽点设计 |
-| 4 | relationships | 重要关系演变 |
-| 5 | milestones | 能力/地位节点 |
-| 6 | plot_hooks | 伏笔埋设与回收 |
+| 1 | arco_del_protagonista | Punto de partida y de llegada del protagonista, y puntos de giro clave |
+| 2 | conflictos | Conflictos internos y obstáculos externos |
+| 3 | eventos_clave | Acontecimientos centrales y diseño de "momentos satisfactorios" (emociones fuertes/recompensas narrativas) |
+| 4 | relaciones | Evolución de las relaciones importantes |
+| 5 | hitos | Hitos en cuanto a habilidades o estatus |
+| 6 | ganchos_trama | Anticipaciones y su resolución |
 
 ---
 
-## 交互流程示例
+## Ejemplo de flujo de interacción
 
-### Round 1: 生成第一个问题
+### Ronda 1: Generación de la primera pregunta
 
-**输入**:
+**Entrada**:
 ```yaml
 mode: "generate_question"
 current_confirmed: {}
 pending_dimensions: ["protagonist_arc", "conflicts", ...]
 ```
 
-**输出**:
+**Salida**:
 ```yaml
 status: "in_progress"
 action: "ask_user"
 question:
-  id: "q1_protagonist_start"
-  dimension: "protagonist_arc"
-  text: "主角开场是什么状态？"
-  description: "这决定了故事的起点和读者的代入感"
-  options:
-    - id: "A"
-      text: "已经很惨（被退婚、被废、被追杀）"
-    - id: "B"
-      text: "一般惨（家境普通，怀才不遇）"
-    - id: "C"
-      text: "看似光鲜（实际有隐忧）"
-  allow_free_input: true
+id: "q1_protagonist_start"
+dimension: "protagonist_arc"
+text: "¿Cuál es la situación del protagonista al inicio?" 
+description: "Esto determina el punto de partida de la historia y la sensación de inmersión del lector."
+``` opciones:
+- id: "A"
+text: "Ya se encuentra en una situación desesperada (p. ej., compromiso roto, poderes anulados, siendo perseguido)"
+- id: "B"
+text: "Moderadamente desafortunado (p. ej., origen humilde, talento no reconocido)"
+- id: "C"
+text: "Aparentemente glamuroso (pero con problemas ocultos subyacentes)"
+allow_free_input: true
 confirmed_update: {}
 next_dimension: "protagonist_arc"
 progress:
-  current: 1
-  total: 6
+current: 1
+total: 6
 ```
 
-### Round 2: 处理用户回答
+### Ronda 2: Procesamiento de la respuesta del usuario
 
-**输入**:
+**Entrada**:
 ```yaml
 mode: "process_answer"
 current_confirmed: {}
 last_answer:
-  question_id: "q1_protagonist_start"
-  selected_option: "A"
-  answer_text: "被退婚的废材少年"
+question_id: "q1_protagonist_start"
+selected_option: "A"
+answer_text: "El chico inútil cuyo compromiso fue cancelado"
+
 ```
 
-**输出**:
+**Salida**:
+
 ```yaml
 status: "in_progress"
 action: "ask_user"
 question:
-  id: "q2_protagonist_end"
-  dimension: "protagonist_arc"
-  text: "那结尾你想让他变成什么样？"
-  options:
-    - id: "A"
-      text: "站在世界巅峰"
-    - id: "B"
-      text: "找到真爱归隐"
-    - id: "C"
-      text: "复仇成功但失去一切"
-confirmed_update:
-  protagonist_arc:
-    start: "被退婚的废材少年"
-next_dimension: "protagonist_arc"
-progress:
-  current: 1
-  total: 6
+
+id: "q2_protagonist_end"
+
+dimension: "protagonist_arc"
+
+text: "¿Qué tipo de final quieres que tenga?"
+
+opciones:
+
+- id: "A"
+
+texto: "Estar en la cima del mundo"
+
+- id: "B"
+
+texto: "Encontrar el amor verdadero y retirarse"
+
+- id: "C"
+
+texto: "Vengarse con éxito pero perderlo todo"
+
+actualización_confirmada:
+
+arco_del_protagonista:
+
+inicio: "El chico inútil cuyo compromiso fue anulado"
+
+siguiente_dimensión: "arco_del_protagonista"
+
+progreso:
+
+actual: 1
+
+total: 6
+
 ```
 
-### Final Round: 完成
+### Ronda final: Completar
 
-**输入**:
+**Entrada**:
+
 ```yaml
-mode: "finalize"
-current_confirmed:
-  protagonist_arc: {...}
-  conflicts: {...}
-  ...
+modo: "finalizar"
+
+confirmado_actualmente:
+
+arco_del_protagonista: {...}
+conflictos: {...}
+...
 ```
 
-**输出**:
+**Salida**:
 ```yaml
-status: "completed"
-action: "complete"
-confirmed_elements:
-  protagonist_arc: {...}
-  conflicts: {...}
-  key_events: {...}
-  relationships: {...}
-  milestones: {...}
-  plot_hooks: {...}
-file_updates:
-  - path: "memory/brainstorm-result.yaml"
-    content: "..."
-next_step: "proceed_to_setup"
+estado: "completado"
+acción: "completar"
+elementos_confirmados:
+arco_del_protagonista: {...}
+conflictos: {...}
+eventos_clave: {...}
+relaciones: {...}
+hitos: {...}
+ganchos_trama: {...}
+actualizaciones_archivo:
+- ruta: "memory/brainstorm-result.yaml"
+contenido: "..."
+siguiente_paso: "proceder_a_configuración"
 ```
 
 ---
 
-## 使用方式
+## Uso
 
-由主 Skill (novel-writer) 调用：
+Llamado por la Habilidad principal (novel-writer):
 
 ```javascript
-// 第一轮
+// primera ronda
 const result = await callSubSkill('novel-brainstorm', {
-  mode: 'generate_question',
-  context: { current_confirmed: {}, pending_dimensions: [...] }
+mode: 'generate_question',
+context: { current_confirmed: {}, pending_dimensions: [...] }
 });
 
-// 展示给用户，收集回答
+// Mostrar al usuario y recopilar respuestas.
+
 const userAnswer = await presentToUser(result.question);
 
-// 下一轮
+// Siguiente ronda
 const result2 = await callSubSkill('novel-brainstorm', {
-  mode: 'process_answer',
-  context: {
-    current_confirmed: result.confirmed_update,
-    last_answer: userAnswer
-  }
+mode: 'process_answer',
+context: {
+current_confirmed: result.confirmed_update,
+
+last_answer: userAnswer
+
+}
 });
 
-// 循环直到 result.action === 'complete'
+// Repetir hasta que result.action === 'complete'
+
 ```
 
 ---
 
-## 注意事项
+## Mejores prácticas
 
-1. **每轮只问1-2个问题**，不轰炸用户
-2. **提供选项+开放输入**，降低决策成本
-3. **解释为什么问**，让用户理解价值
-4. **显示进度**，让用户知道还有多久
-5. **允许回退**，用户可以修改之前的答案
+1. **Haz solo 1 o 2 preguntas por ronda** para evitar abrumar al usuario.
+2. **Ofrece opciones junto con la posibilidad de respuestas abiertas** para reducir la carga cognitiva de la toma de decisiones.
+3. **Explica el motivo de la pregunta** para que el usuario comprenda su valor. 4. **Mostrar el progreso** para informar al usuario de cuánto queda.
+5. **Permitir retroceder** para que los usuarios puedan modificar respuestas anteriores.
