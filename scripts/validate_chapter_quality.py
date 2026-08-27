@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-novel-writer 章节质量审查脚本 - 优秀网文10大标准
-使用：python3 validate_chapter_quality.py <书名> <章节号>
+Script de revisión de calidad de capítulos de novel-writer - Los 10 grandes estándares de la ficción.
+Uso: python3 validate_chapter_quality.py <NombreDelLibro> <NumeroDeCapitulo>
 """
 
 import sys
@@ -9,10 +9,11 @@ import re
 from pathlib import Path
 
 def get_project_path(book_name):
-    """获取项目路径"""
+    """Obtiene la ruta del proyecto"""
     paths = [
         Path.home() / ".openclaw" / "workspace" / "content-projects" / book_name,
         Path.home() / "Documents" / book_name,
+        Path.cwd() / book_name,
     ]
     for path in paths:
         if path.exists():
@@ -20,7 +21,7 @@ def get_project_path(book_name):
     return None
 
 def load_chapter(project_path, chapter_code):
-    """加载章节内容"""
+    """Carga el contenido del capítulo"""
     chapter_parts = chapter_code.split('_')
     if len(chapter_parts) != 2:
         return None
@@ -31,190 +32,192 @@ def load_chapter(project_path, chapter_code):
     return chapter_file.read_text(encoding='utf-8')
 
 def check_opening_hook(content):
-    """标准1：开场抓人 - 前3段必须有强钩子"""
+    """Estándar 1: Gancho inicial - Los primeros 3 párrafos deben atrapar"""
     lines = content.split('\n')
     first_3_paragraphs = '\n'.join([l for l in lines[:15] if l.strip()][:3])
     
-    # 检查是否有悬念、冲突或情绪
+    # Buscar suspense, conflicto o emoción (adaptado a español y signos de interrogación/exclamación invertidos)
     hook_patterns = [
-        r'[？！]',
-        r'["""].*?["""]',
-        r'(死|杀|血|死|崩溃|绝望|惊喜|震惊)',
-        r'(但是|然而|突然|没想到)',
+        r'[¿?¡!]',
+        r'[""«»]',
+        r'(muert|sangr|matar|muer|colaps|desesper|sorpresa|impacto|asombro|shock)',
+        r'(per|sin embargo|de repente|súbitamente|inesperadamente|cuando menos)',
     ]
     
     hook_score = 0
     for pattern in hook_patterns:
-        if re.search(pattern, first_3_paragraphs):
+        if re.search(pattern, first_3_paragraphs, re.IGNORECASE):
             hook_score += 1
     
-    return min(hook_score, 2)  # 满分2分
+    return min(hook_score, 2)  # Máximo 2 puntos
 
 def check_pacing(content):
-    """标准2：节奏紧凑 - 每3-5段一个小高潮"""
+    """Estándar 2: Ritmo紧凑 (compacto) - Un mini-clímax cada 3-5 párrafos"""
     paragraphs = [p for p in content.split('\n\n') if p.strip() and not p.startswith('#')]
     
-    # 检查高潮标记（冲突、转折、对话爆发）
-    climax_markers = ['"', '"', '？', '！', '突然', '但是', '然后', '结果']
+    # Marcadores de clímax (conflicto, giros, diálogos intensos)
+    climax_markers = ['"', '"', '«', '»', '¿', '?', '¡', '!', 'de repente', 'per', 'sin embargo', 'entonces', 'como resultado']
     
     climax_count = 0
-    for i, para in enumerate(paragraphs):
-        if any(marker in para for marker in climax_markers):
+    for para in paragraphs:
+        if any(marker in para.lower() for marker in climax_markers):
             climax_count += 1
     
-    # 平均每5段应有1个高潮
+    # Promedio esperado: 1 clímax cada 5 párrafos
     expected_climax = len(paragraphs) / 5
     ratio = climax_count / max(expected_climax, 1)
     
-    return min(int(ratio * 2), 2)  # 满分2分
+    return min(int(ratio * 2), 2)  # Máximo 2 puntos
 
 def check_conflict(content):
-    """标准3：每章有冲突 - 至少2个冲突"""
+    """Estándar 3: Conflicto en cada capítulo - Al menos 2 conflictos"""
     conflict_patterns = [
-        r'(不服|不满|愤怒|怼|反驳|质问)',
-        r'(拒绝|不同意|反对|抗争)',
-        r'(矛盾|冲突|对立|斗争)',
-        r'["""].*?(不|没|别|滚|操|他妈|傻逼|垃圾)["""]',
+        r'(desacuerdo|insatisfacción|rabia|enfado|ira|rebatir|refutar|reprochar|confrontar)',
+        r'(rechaz|negativ|oposición|resistenci|luch|pele|discut)',
+        r'(contradicción|conflict|oposición|luch|tensión)',
+        r'[""«»].*?(no|nunca|jamás|vete|lárgate|idiota|estúpido|basura|maldición|caraj)[""«»]',
     ]
     
     conflict_count = 0
     for pattern in conflict_patterns:
-        if re.search(pattern, content):
+        if re.search(pattern, content, re.IGNORECASE):
             conflict_count += 1
     
-    return min(conflict_count, 2)  # 满分2分
+    return min(conflict_count, 2)  # Máximo 2 puntos
 
 def check_character_motivation(content):
-    """标准4：人物有动机 - 主角和反派动机清晰"""
+    """Estándar 4: Motivación de personajes - Protagonista y antagonista con motivos claros"""
     motivation_markers = [
-        r'(为了|因为|想|要|希望|期待|害怕|担心)',
-        r'(凭什么|为什么|怎么回事)',
-        r'(我不服|我不甘心|我要|我必须)',
+        r'(para|porque|quier|dese|esperanz|ilusión|tem|mied|preocupación)',
+        r'(por qué|cómo es posible|qué diablos|qué pasa|qué demonios)',
+        r'(no me rindo|no me conform|quier|debo|tengo que|necesito|exijo|juro)',
     ]
     
     motivation_count = 0
     for marker in motivation_markers:
-        if re.search(marker, content):
+        if re.search(marker, content, re.IGNORECASE):
             motivation_count += 1
     
-    return min(motivation_count, 2)  # 满分2分
+    return min(motivation_count, 2)  # Máximo 2 puntos
 
 def check_dialogue(content):
-    """标准5：对话有戏 - 推动情节，有潜台词"""
-    # 提取所有对话
-    dialogues = re.findall(r'["""]([^"""]+)["""]', content)
+    """Estándar 5: Diálogos con chispa - Impulsan la trama, tienen subtexto"""
+    # Extraer todos los diálogos (usando comillas latinas y españolas)
+    dialogues = re.findall(r'[""«»]([^""«»]+)[""«»]', content)
     
     if len(dialogues) < 3:
         return 0
     
-    # 检查对话是否有潜台词（简短、有冲突、有情绪）
+    # Verificar si los diálogos son dinámicos (cortos y con pronombres personales)
     good_dialogue = 0
     for dialogue in dialogues:
-        if len(dialogue) < 50 and ('你' in dialogue or '我' in dialogue):
+        # Diálogos cortos (< 60 chars) que incluyen interacción (tú, yo, me, te)
+        if len(dialogue) < 60 and re.search(r'\b(tú|vos|usted|yo|me|te|se|nos)\b', dialogue, re.IGNORECASE):
             good_dialogue += 1
     
     ratio = good_dialogue / max(len(dialogues), 1)
-    return min(int(ratio * 2), 2)  # 满分2分
+    return min(int(ratio * 2), 2)  # Máximo 2 puntos
 
 def check_ending_hook(content):
-    """标准6：结尾有钩子 - 必须为下一章留悬念"""
+    """Estándar 6: Gancho final - Debe dejar suspense para el siguiente capítulo"""
     last_lines = '\n'.join(content.split('\n')[-10:])
     
     hook_patterns = [
-        r'[？！]',
-        r'(但是|然而|突然|没想到|原来|竟然)',
-        r'(等着|来了|响了|响了|震动)',
-        r'(门|电话|手机|消息|声音)',
-        r'[(（]第.*章.*完[)）]',
+        r'[¿?¡!]',
+        r'(per|sin embargo|de repente|súbitamente|inesperadamente|resulta que|al final|para sorpresa)',
+        r'(esper|lleg|son|vibr|retumb|escuch|pasos)',
+        r'(puert|teléfon|móvil|celular|mensaj|voz|sonid|ruid|llamad)',
+        r'[(（]Fin del capítulo.*[)）]',
     ]
     
     hook_score = 0
     for pattern in hook_patterns:
-        if re.search(pattern, last_lines):
+        if re.search(pattern, last_lines, re.IGNORECASE):
             hook_score += 1
     
-    return min(hook_score, 2)  # 满分2分
+    return min(hook_score, 2)  # Máximo 2 puntos
 
 def check_information_density(content):
-    """标准7：信息密度 - 每100字有新信息"""
-    chinese_chars = len(re.findall(r'[\u4e00-\u9fa5]', content))
+    """Estándar 7: Densidad de información - Nueva información cada ~100 palabras"""
+    # En español contamos PALABRAS, no caracteres como en chino
+    spanish_words = len(re.findall(r'\b\w+\b', content))
     
-    # 检查新信息点（数字、名字、事件、转折）
+    # Puntos de nueva información (números, giros, revelaciones)
     info_patterns = [
         r'\d+',
-        r'[\u4e00-\u9fa5]{2,4}(?:公司|部门|项目|方案)',
-        r'(但是|然而|突然|没想到|原来|竟然)',
-        r'(发现|知道|意识到|明白)',
+        r'(per|sin embargo|de repente|inesperadamente|resulta que|al final|sin embargo)',
+        r'(descubr|enter|darse cuenta|comprend|entend|revel|saber|notar)',
     ]
     
     info_count = 0
     for pattern in info_patterns:
-        info_count += len(re.findall(pattern, content))
+        info_count += len(re.findall(pattern, content, re.IGNORECASE))
     
-    # 平均每100字应有1个信息点
-    expected_info = chinese_chars / 100
+    # Promedio esperado: 1 punto de información cada 100 palabras
+    expected_info = spanish_words / 100
     ratio = info_count / max(expected_info, 1)
     
-    return min(int(ratio * 2), 2)  # 满分2分
+    return min(int(ratio * 2), 2)  # Máximo 2 puntos
 
 def check_imagery(content):
-    """标准8：画面感 - 五感描写"""
+    """Estándar 8: Imágenes sensoriales - Descripciones de los 5 sentidos"""
     sensory_words = {
-        '视觉': ['看', '见', '光', '色', '影', '闪', '亮', '暗', '白', '黑', '红'],
-        '听觉': ['听', '声', '音', '响', '震', '嗡', '静', '吵', '铃'],
-        '嗅觉': ['闻', '香', '臭', '味', '气', '熏'],
-        '触觉': ['摸', '触', '感', '冷', '热', '凉', '暖', '抖', '颤'],
-        '味觉': ['尝', '吃', '喝', '甜', '苦', '酸', '辣', '咸'],
+        'visual': ['vi', 'mir', 'luz', 'color', 'sombr', 'brill', 'oscur', 'blanc', 'nej', 'rj'],
+        'auditivo': ['oí', 'escuch', 'sonid', 'ru', 'estruend', 'zumb', 'silenci', 'ruid', 'campan'],
+        'olfativo': ['ol', 'arom', 'hedor', 'perfum', 'huel', 'apesta'],
+        'táctil': ['tact', 'toc', 'sensación', 'frí', 'calient', 'tibio', 'cálid', 'tembl', 'escalofrí', 'eriz'],
+        'gustativo': ['sabore', 'com', 'beb', 'dulc', 'amarg', 'ácid', 'picant', 'salad', 'sabor'],
     }
     
     sensory_count = 0
     for category, words in sensory_words.items():
-        if any(word in content for word in words):
+        if any(word in content.lower() for word in words):
             sensory_count += 1
     
-    return min(sensory_count, 2)  # 满分2分
+    return min(sensory_count, 2)  # Máximo 2 puntos
 
 def check_emotion(content):
-    """标准9：情感真实 - 情感有层次"""
+    """Estándar 9: Emociones reales - Las emociones tienen capas y matices"""
     emotion_words = [
-        r'(期待|兴奋|高兴|笑)',
-        r'(惊讶|震惊|愣|呆)',
-        r'(愤怒|生气|怒|骂|操|他妈)',
-        r'(难过|伤心|失望|绝望|苦)',
-        r'(无奈|累|疲惫|无力|沉默)',
-        r'(希望|想|决定|坚定)',
+        r'(ilusión|emocion|alegr|feliz|content|sonre|rí)',
+        r'(sorprend|asombr|impact|estupefact|atónit|paraliz|petrificad)',
+        r'(rabia|enfado|ira|furios|enojad|maldic|maldit|caraj|demonios)',
+        r'(tristez|dolor|decepción|desesperación|angustia|pena|llor|lágrim)',
+        r'(impotenci|cansanci|agotad|fatiga|incapaz|silenci|mud|resignación)',
+        r'(esperanz|dese|decisión|determinación|firme|convicción|resolv)',
     ]
     
     emotion_count = 0
     for pattern in emotion_words:
-        if re.search(pattern, content):
+        if re.search(pattern, content, re.IGNORECASE):
             emotion_count += 1
     
-    return min(emotion_count, 2)  # 满分2分
+    return min(emotion_count, 2)  # Máximo 2 puntos
 
 def check_ai_flavor(content):
-    """标准10：去AI味 - 自然流畅"""
+    """Estándar 10: Eliminar rastro de IA - Lenguaje natural y fluido"""
+    # Muletillas y estructuras típicas que delatan a la IA en español
     ai_patterns = [
-        r'(从某种意义上说|从某种角度来看)',
-        r'(值得注意的是|关键在于|核心在于)',
-        r'(一方面.*另一方面|既.*又.*但是)',
-        r'(此外|另外|同时|并且|因此|所以)',
-        r'(最终|最后|结局是|结果是)',
-        r'background music',  # 英文混入
+        r'(En cierto sentido|Desde cierta perspectiva|En cierto modo)',
+        r'(Cabe destacar|Es importante señalar|La clave está|El punto crucial|Vale la pena mencionar)',
+        r'(Por un lado.*por otro lado|Tanto.*como.*per)',
+        r'(Además|Asimismo|Por otro lado|Simultáneamente|Por lo tant|En consecuencia|Por ende|Así que)',
+        r'(En conclusión|Finalmente|Para terminar|El resultado fue|El desenlace)',
+        r'(background music|AI|LLM|prompt|como modelo de lenguaje)', # Palabras en inglés o meta-referencias
     ]
     
     ai_count = 0
     for pattern in ai_patterns:
-        if re.search(pattern, content):
+        if re.search(pattern, content, re.IGNORECASE):
             ai_count += 1
     
-    # 分数越高越好，所以用 2 - ai_count
-    return max(2 - ai_count, 0)  # 满分2分
+    # A mayor cantidad de patrones de IA, menor puntuación
+    return max(2 - ai_count, 0)  # Máximo 2 puntos
 
 def main():
     if len(sys.argv) < 3:
-        print("用法：python3 validate_chapter_quality.py <书名> <章节号>")
-        print("示例：python3 validate_chapter_quality.py 我的员工都是隐藏大佬 1_01")
+        print("Uso: python3 validate_chapter_quality.py <NombreDelLibro> <NumeroDeCapitulo>")
+        print("Ejemplo: python3 validate_chapter_quality.py El_Caballero_Audaz 1_01")
         sys.exit(1)
     
     book_name = sys.argv[1]
@@ -222,29 +225,29 @@ def main():
     
     project_path = get_project_path(book_name)
     if not project_path:
-        print(f"❌ 错误：找不到项目目录 '{book_name}'")
+        print(f"❌ Error: No se encontró el directorio del proyecto '{book_name}'")
         sys.exit(1)
     
     content = load_chapter(project_path, chapter_code)
     if not content:
-        print(f"❌ 错误：找不到章节文件 '{chapter_code}'")
+        print(f"❌ Error: No se encontró el archivo del capítulo '{chapter_code}'")
         sys.exit(1)
     
-    print(f"🔍 优秀网文10大标准审查：{book_name} 第{chapter_code}章")
-    print("=" * 60)
+    print(f"🔍 Revisión de los 10 grandes estándares de ficción: '{book_name}' Capítulo {chapter_code}")
+    print("=" * 70)
     
-    # 执行10项检查
+    # Ejecutar las 10 verificaciones
     checks = [
-        ("开场抓人", check_opening_hook, "前3段有悬念/冲突/情绪"),
-        ("节奏紧凑", check_pacing, "每3-5段有小高潮"),
-        ("每章有冲突", check_conflict, "至少2个冲突"),
-        ("人物有动机", check_character_motivation, "主角和反派动机清晰"),
-        ("对话有戏", check_dialogue, "对话推动情节，有潜台词"),
-        ("结尾有钩子", check_ending_hook, "为下一章留悬念"),
-        ("信息密度", check_information_density, "每100字有新信息"),
-        ("画面感", check_imagery, "五感描写"),
-        ("情感真实", check_emotion, "情感有层次"),
-        ("去AI味", check_ai_flavor, "自然流畅，无AI痕迹"),
+        ("Gancho inicial", check_opening_hook, "Suspense/conflicto en los primeros 3 párrafos"),
+        ("Ritmo", check_pacing, "Un mini-clímax cada 3-5 párrafos"),
+        ("Conflicto", check_conflict, "Al menos 2 conflictos en el capítulo"),
+        ("Motivación", check_character_motivation, "Motivos claros del protagonista/antagonista"),
+        ("Diálogos", check_dialogue, "Diálogos que impulsan la trama, con subtexto"),
+        ("Gancho final", check_ending_hook, "Deja suspense para el siguiente capítulo"),
+        ("Densidad info", check_information_density, "Nueva información cada ~100 palabras"),
+        ("Sensorial", check_imagery, "Descripciones que apelan a los 5 sentidos"),
+        ("Emociones", check_emotion, "Emociones con capas y matices reales"),
+        ("Cero IA", check_ai_flavor, "Lenguaje natural, sin muletillas de IA"),
     ]
     
     total_score = 0
@@ -258,50 +261,50 @@ def main():
         status = "✓" if score >= 1 else "⚠"
         bar = "█" * score + "░" * (2 - score)
         
-        print(f"{status} {name:12s} [{bar}] {score}/2 - {desc}")
+        print(f"{status} {name:<15} [{bar}] {score}/2 - {desc}")
     
-    print("=" * 60)
+    print("=" * 70)
     percentage = (total_score / max_score) * 100
     
     if percentage >= 80:
-        level = "优秀"
+        level = "¡Excelente!"
         emoji = "🌟"
     elif percentage >= 60:
-        level = "良好"
+        level = "Bueno"
         emoji = "✅"
     elif percentage >= 40:
-        level = "及格"
+        level = "Aceptable"
         emoji = "⚠️"
     else:
-        level = "不及格"
+        level = "Requiere reescritura"
         emoji = "❌"
     
-    print(f"{emoji} 总分：{total_score}/{max_score} ({percentage:.1f}%) - {level}")
+    print(f"{emoji} Puntuación total: {total_score}/{max_score} ({percentage:.1f}%) - {level}")
     
     if percentage < 80:
-        print("\n💡 改进建议：")
+        print("\n💡 Sugerencias de mejora para el Agente:")
         if check_opening_hook(content) < 2:
-            print("  - 开场加强钩子，增加悬念或冲突")
+            print("  - Refuerza el gancho inicial, añade más suspense o conflicto al principio.")
         if check_pacing(content) < 2:
-            print("  - 节奏加快，每3-5段设置一个小高潮")
+            print("  - Acelera el ritmo, introduce un mini-clímax o giro cada pocos párrafos.")
         if check_conflict(content) < 2:
-            print("  - 增加冲突，让主角主动反抗")
+            print("  - Aumenta el conflicto, haz que el protagonista se enfrente activamente a obstáculos.")
         if check_character_motivation(content) < 2:
-            print("  - 明确人物动机，增加内心戏")
+            print("  - Aclara la motivación de los personajes, añade más monólogo interno o deseos.")
         if check_dialogue(content) < 2:
-            print("  - 对话要有潜台词，推动情节")
+            print("  - Mejora los diálogos, que tengan subtexto y hagan avanzar la trama.")
         if check_ending_hook(content) < 2:
-            print("  - 结尾加强钩子，留下悬念")
+            print("  - Refuerza el gancho final, deja una pregunta o evento sin resolver.")
         if check_information_density(content) < 2:
-            print("  - 增加信息密度，每100字有新信息")
+            print("  - Aumenta la densidad de información, revela detalles del mundo o trama constantemente.")
         if check_imagery(content) < 2:
-            print("  - 增加五感描写，增强画面感")
+            print("  - Añade descripciones sensoriales (vista, oído, tacto, olfato, gusto).")
         if check_emotion(content) < 2:
-            print("  - 情感要有层次，展现情绪变化")
+            print("  - Profundiza en las emociones, muestra reacciones físicas y matices psicológicos.")
         if check_ai_flavor(content) < 2:
-            print("  - 去除AI痕迹，让语言更自然")
+            print("  - Elimina el 'sabor a IA': quita frases como 'Cabe destacar', 'En conclusión', 'Por un lado'.")
     
-    print("\n✅ 审查完成")
+    print("\n✅ Revisión de calidad completada.")
     return 0 if percentage >= 60 else 1
 
 if __name__ == "__main__":
